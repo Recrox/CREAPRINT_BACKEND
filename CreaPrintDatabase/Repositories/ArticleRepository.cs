@@ -1,33 +1,14 @@
 using CreaPrintCore.Interfaces;
 using CreaPrintCore.Models;
+using CreaPrintCore.Repositories;
 using Microsoft.EntityFrameworkCore;
 
-namespace CreaPrintDatabase.Repositories
+namespace CreaPrintDatabase.Repositories;
+
+public class ArticleRepository : GenericRepository<Article>, IArticleRepository
 {
-    public class ArticleRepository : IArticleRepository
+    public ArticleRepository(CreaPrintDbContext context) : base(context)
     {
-        private readonly CreaPrintDbContext _context;
-
-        public ArticleRepository(CreaPrintDbContext context)
-        {
-            _context = context;
-        }
-
-        public async Task<IEnumerable<Article>> GetAllAsync()
-        {
-            return await _context.Articles.ToListAsync();
-        }
-
-        public async Task<Article?> GetByIdAsync(int id)
-        {
-            return await _context.Articles.FindAsync(id);
-        }
-
-        public async Task<Article> CreateAsync(Article article)
-        {
-            _context.Articles.Add(article);
-            await _context.SaveChangesAsync();
-            return article;
-        }
     }
+    // Ajoute ici des méthodes spécifiques à Article si besoin
 }

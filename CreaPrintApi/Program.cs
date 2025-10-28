@@ -38,8 +38,8 @@ if (app.Environment.IsDevelopment())
     {
         db.Articles.AddRange(new[]
         {
-            new CreaPrintCore.Models.Article { Title = "Premier article", Content = "Contenu de test", Category = "Test", CreatedAt = DateTime.Now },
-            new CreaPrintCore.Models.Article { Title = "Second article", Content = "Encore du contenu", Category = "Demo", CreatedAt = DateTime.Now }
+            new CreaPrintCore.Models.Article { Title = "Premier article", Content = "Contenu de test", Category = "Test", CreatedOn = DateTime.Now },
+            new CreaPrintCore.Models.Article { Title = "Second article", Content = "Encore du contenu", Category = "Demo", CreatedOn = DateTime.Now }
         });
         db.SaveChanges();
     }
