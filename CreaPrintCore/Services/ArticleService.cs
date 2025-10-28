@@ -1,6 +1,6 @@
 using CreaPrintCore.Interfaces;
 using CreaPrintCore.Models;
-using CreaPrintDatabase.Interfaces;
+using CreaPrintCore.Interfaces;
 
 namespace CreaPrintCore.Services
 {

@@ -8,7 +8,7 @@ namespace CreaPrintConfiguration.Setup
  {
  public static IServiceCollection AddGlobalConfiguration(this IServiceCollection services, IConfiguration configuration)
  {
- services.Configure<DatabaseSettings>(configuration.GetSection("ConnectionStrings"));
+ services.Configure<DatabaseSettings>(configuration.GetSection("DatabaseSettings"));
  return services;
  }
  }

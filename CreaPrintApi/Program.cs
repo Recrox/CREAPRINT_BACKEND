@@ -1,5 +1,4 @@
 using CreaPrintDatabase;
-using CreaPrintDatabase.Interfaces;
 using CreaPrintDatabase.Repositories;
 using CreaPrintCore.Interfaces;
 using CreaPrintCore.Services;
@@ -32,5 +31,11 @@ if (app.Environment.IsDevelopment())
 app.UseHttpsRedirection();
 app.UseAuthorization();
 app.MapControllers();
+
+// Redirige la racine vers Swagger
+app.MapGet("/", context => {
+ context.Response.Redirect("/swagger");
+ return Task.CompletedTask;
+});
 
 app.Run();

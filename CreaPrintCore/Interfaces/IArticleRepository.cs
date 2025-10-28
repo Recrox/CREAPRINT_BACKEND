@@ -2,7 +2,7 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using CreaPrintCore.Models;
 
-namespace CreaPrintDatabase.Interfaces
+namespace CreaPrintCore.Interfaces
 {
  public interface IArticleRepository
  {

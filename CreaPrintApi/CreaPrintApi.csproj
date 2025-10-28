@@ -17,9 +17,9 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="CreaPrintCore/CreaPrintCore.csproj" />
-    <ProjectReference Include="CreaPrintDatabase/CreaPrintDatabase.csproj" />
-    <ProjectReference Include="CreaPrintConfiguration/CreaPrintConfiguration.csproj" />
+    <ProjectReference Include="../CreaPrintCore/CreaPrintCore.csproj" />
+    <ProjectReference Include="../CreaPrintDatabase/CreaPrintDatabase.csproj" />
+    <ProjectReference Include="../CreaPrintConfiguration/CreaPrintConfiguration.csproj" />
   </ItemGroup>
 
 </Project>
