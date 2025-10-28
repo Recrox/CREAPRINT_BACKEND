@@ -52,3 +52,11 @@ CodeCoverage/
 *.VisualState.xml
 TestResult.xml
 nunit-*.xml
+
+# Visual Studio temporary files and folders
+.vs/
+
+# Copilot files
+*.copilot.*
+copilot-*.json
+copilot-*.log
