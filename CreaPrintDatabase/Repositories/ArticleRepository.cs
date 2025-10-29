@@ -7,16 +7,34 @@ namespace CreaPrintDatabase.Repositories;
 
 public class ArticleRepository : GenericRepository<Article>, IArticleRepository
 {
+    private readonly CreaPrintDbContext _dbContext;
     public ArticleRepository(CreaPrintDbContext context) : base(context)
     {
+        _dbContext = context;
     }
-    // Ajoute ici des méthodes spécifiques à Article si besoin
-    public async Task<IEnumerable<Article>> GetPagedAsync(int page, int pageSize)
+
+    public override async Task<IEnumerable<Article>> GetAllAsync()
     {
-        return await base.GetPagedAsync(page, pageSize);
+        return await _dbContext.Articles.Include(a => a.Category).ToListAsync();
     }
+
+    public override async Task<IEnumerable<Article>> GetPagedAsync(int page, int pageSize)
+    {
+        return await _dbContext.Articles.Include(a => a.Category)
+            .Skip(page * pageSize).Take(pageSize).ToListAsync();
+    }
+
+    public override async Task<Article?> GetByIdAsync(int id)
+    {
+        return await _dbContext.Articles.Include(a => a.Category)
+            .FirstOrDefaultAsync(a => a.Id == id);
+    }
+
     public async Task<int> GetCountAsync(Func<Article, bool>? filter = null)
-{
-    return await base.GetCountAsync(filter);
-}
+    {
+        if (filter == null)
+            return await _dbContext.Articles.CountAsync();
+        else
+            return await Task.FromResult(_dbContext.Articles.Count(filter));
+    }
 }
