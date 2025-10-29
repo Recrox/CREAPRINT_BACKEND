@@ -46,7 +46,7 @@ var app = builder.Build();
 // Initialisation de la base InMemory avec des articles de test (dev uniquement)
 if (app.Environment.IsDevelopment())
 {
-    using var scope = app.Services.CreateScope();PageActionEndpointConventionBuilder 
+    using var scope = app.Services.CreateScope();
     var db = scope.ServiceProvider.GetRequiredService<CreaPrintDbContext>();
     if (!db.Articles.Any())
     {
