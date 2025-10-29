@@ -3,6 +3,7 @@ using CreaPrintCore.Setup;
 using CreaPrintDatabase.Setup;
 using CreaPrintConfiguration.Setup;
 using Microsoft.EntityFrameworkCore;
+using CreaPrintCore.Models;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -10,6 +11,19 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddGlobalConfiguration(builder.Configuration);
 builder.Services.AddCoreServices();
 builder.Services.AddDatabaseRepositories();
+
+// Lecture des AllowedHosts pour CORS
+IEnumerable<string> allowedHosts = builder.Configuration["AllowedHosts"]?.Split(';', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries) ?? [];
+
+builder.Services.AddCors(options =>
+{
+    options.AddDefaultPolicy(policy =>
+    {
+        policy.WithOrigins(allowedHosts.ToArray())
+              .AllowAnyHeader()
+              .AllowAnyMethod();
+    });
+});
 
 // Choix du provider de base de données (InMemory pour dev, SQL Server pour prod)
 if (builder.Environment.IsDevelopment())
@@ -38,8 +52,12 @@ if (app.Environment.IsDevelopment())
     {
         db.Articles.AddRange(new[]
         {
-            new CreaPrintCore.Models.Article { Title = "Premier article", Content = "Contenu de test", Category = "Test", CreatedOn = DateTime.Now },
-            new CreaPrintCore.Models.Article { Title = "Second article", Content = "Encore du contenu", Category = "Demo", CreatedOn = DateTime.Now }
+            new Article { Title = "Premier article", Content = "Contenu de test", Category = "Test", CreatedOn = DateTime.Now, Price =10.99m },
+            new CreaPrintCore.Models.Article { Title = "Second article", Content = "Encore du contenu", Category = "Demo", CreatedOn = DateTime.Now, Price =15.50m },
+            new CreaPrintCore.Models.Article { Title = "3 iem article", Content = "Contenu de test", Category = "Test", CreatedOn = DateTime.Now, Price =8.75m },
+            new CreaPrintCore.Models.Article { Title = "4 iem article", Content = "Encore du contenu", Category = "Demo", CreatedOn = DateTime.Now, Price =12.00m },
+            new CreaPrintCore.Models.Article { Title = "5 iem article", Content = "Contenu de test", Category = "Test", CreatedOn = DateTime.Now, Price =9.99m },
+            new CreaPrintCore.Models.Article { Title = "6 iem article", Content = "Encore du contenu", Category = "Demo", CreatedOn = DateTime.Now, Price =20.00m }
         });
         db.SaveChanges();
     }
@@ -53,6 +71,7 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
+app.UseCors(); // Ajout du middleware CORS
 app.UseAuthorization();
 app.MapControllers();
 
