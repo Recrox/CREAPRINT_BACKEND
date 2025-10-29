@@ -11,4 +11,12 @@ public class ArticleRepository : GenericRepository<Article>, IArticleRepository
     {
     }
     // Ajoute ici des méthodes spécifiques à Article si besoin
+    public async Task<IEnumerable<Article>> GetPagedAsync(int page, int pageSize)
+    {
+        return await base.GetPagedAsync(page, pageSize);
+    }
+    public async Task<int> GetCountAsync(Func<Article, bool>? filter = null)
+{
+    return await base.GetCountAsync(filter);
+}
 }

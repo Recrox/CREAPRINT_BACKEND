@@ -27,5 +27,15 @@ namespace CreaPrintCore.Services
  {
  return await _repository.CreateAsync(article);
  }
+
+ public async Task<IEnumerable<Article>> GetPagedAsync(int page, int pageSize)
+ {
+ return await _repository.GetPagedAsync(page, pageSize);
+ }
+
+ public async Task<int> GetCountAsync(Func<Article, bool>? filter = null)
+ {
+ return await _repository.GetCountAsync(filter);
+ }
  }
 }

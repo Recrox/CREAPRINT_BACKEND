@@ -3,7 +3,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace CreaPrintCore.Repositories
 {
- public abstract class GenericRepository<T> : IGenericRepository<T> where T : BaseItem
+ public abstract class GenericRepository<T> : IGenericRepository<T> where T : BaseEntity
  {
  protected readonly DbContext _context;
  protected readonly DbSet<T> _dbSet;
@@ -45,6 +45,19 @@ namespace CreaPrintCore.Repositories
  _dbSet.Remove(entity);
  await _context.SaveChangesAsync();
  }
+ }
+
+ public virtual async Task<IEnumerable<T>> GetPagedAsync(int page, int pageSize)
+ {
+ return await _dbSet.Skip((page -1) * pageSize).Take(pageSize).ToListAsync();
+ }
+
+ public virtual async Task<int> GetCountAsync(Func<T, bool>? filter = null)
+ {
+ if (filter == null)
+ return await _dbSet.CountAsync();
+ else
+ return await Task.FromResult(_dbSet.Count(filter));
  }
  }
 }

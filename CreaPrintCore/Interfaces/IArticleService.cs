@@ -8,5 +8,7 @@ namespace CreaPrintCore.Interfaces
  Task<IEnumerable<Models.Article>> GetAllAsync();
  Task<Models.Article?> GetByIdAsync(int id);
  Task<Models.Article> CreateAsync(Models.Article article);
+ Task<IEnumerable<Models.Article>> GetPagedAsync(int page, int pageSize);
+ Task<int> GetCountAsync(Func<Models.Article, bool>? filter = null);
  }
 }
