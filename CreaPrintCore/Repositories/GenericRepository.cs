@@ -3,7 +3,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace CreaPrintCore.Repositories
 {
- public class GenericRepository<T> : IGenericRepository<T> where T : BaseItem
+ public abstract class GenericRepository<T> : IGenericRepository<T> where T : BaseItem
  {
  protected readonly DbContext _context;
  protected readonly DbSet<T> _dbSet;
