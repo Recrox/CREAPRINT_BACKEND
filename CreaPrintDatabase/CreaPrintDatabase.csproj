@@ -18,8 +18,4 @@
     <ProjectReference Include="..\CreaPrintCore\CreaPrintCore.csproj" />
   </ItemGroup>
 
-  <ItemGroup>
-    <Folder Include="Interfaces\" />
-  </ItemGroup>
-
 </Project>
