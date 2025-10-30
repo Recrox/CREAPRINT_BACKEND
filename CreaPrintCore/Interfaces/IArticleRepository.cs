@@ -13,6 +13,8 @@ namespace CreaPrintCore.Interfaces
         Task<IEnumerable<Article>> GetPagedAsync(int page, int pageSize);
         Task<int> GetCountAsync(Func<Article, bool>? filter = null);
         Task UpdateAsync(Article article);
+        Task<Article?> UpdateAndGetAsync(Article article);
+        Task<IEnumerable<Article>> GetByTitleAsync(string title);
         Task DeleteAsync(int id);
     }
 }

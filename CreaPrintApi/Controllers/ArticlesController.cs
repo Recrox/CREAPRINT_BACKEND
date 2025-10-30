@@ -37,6 +37,14 @@ public class ArticlesController : BaseController
         return Ok(article);
     }
 
+    // Search by title
+    [HttpGet("search")]
+    public async Task<ActionResult<IEnumerable<Article>>> Search([FromQuery] string title)
+    {
+        var results = await _service.GetByTitleAsync(title);
+        return Ok(results);
+    }
+
     [HttpPost]
     public async Task<ActionResult<Article>> Create(Article article)
     {
@@ -49,8 +57,8 @@ public class ArticlesController : BaseController
     {
         if (id != article.Id) return BadRequest();
         var updated = await _service.UpdateAsync(id, article);
-        if (!updated) return NotFound();
-        return NoContent();
+        if (updated == null) return NotFound();
+        return Ok(updated);
     }
 
     [HttpPatch("{id}")]
@@ -65,8 +73,8 @@ public class ArticlesController : BaseController
         if (!ModelState.IsValid) return ValidationProblem(ModelState);
 
         var updated = await _service.UpdateAsync(id, existing);
-        if (!updated) return NotFound();
-        return NoContent();
+        if (updated == null) return NotFound();
+        return Ok(updated);
     }
 
     [HttpDelete("{id}")]

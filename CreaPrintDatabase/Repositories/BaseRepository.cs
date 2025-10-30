@@ -1,14 +1,15 @@
 using CreaPrintCore.Models;
 using Microsoft.EntityFrameworkCore;
+using System.Linq.Expressions;
 
 namespace CreaPrintCore.Repositories
 {
-    public abstract class GenericRepository<T> : IGenericRepository<T> where T : BaseEntity
+    public abstract class BaseRepository<T> : IBaseRepository<T> where T : BaseEntity
     {
         protected readonly DbContext _context;
         protected readonly DbSet<T> _dbSet;
 
-        public GenericRepository(DbContext context)
+        public BaseRepository(DbContext context)
         {
             _context = context;
             _dbSet = _context.Set<T>();
@@ -47,6 +48,30 @@ namespace CreaPrintCore.Repositories
 
             _dbSet.Update(entity);
             await _context.SaveChangesAsync();
+        }
+
+        // New helper: update and return the refreshed entity from the database
+        public virtual async Task<T?> UpdateAndGetAsync(T entity)
+        {
+            // if entity supports audit, set UpdatedOn
+            if (entity is AuditableEntity aud)
+            {
+                aud.UpdatedOn = DateTime.UtcNow;
+            }
+
+            _dbSet.Update(entity);
+            await _context.SaveChangesAsync();
+
+            // Reload the entity from the database to get current values (including related data if available)
+            var refreshed = await GetByIdAsync(entity.Id);
+            return refreshed;
+        }
+
+        // Generic find by predicate (use Expression to allow EF translation)
+        public virtual async Task<IEnumerable<T>> FindAsync(Expression<Func<T, bool>> predicate)
+        {
+            if (predicate == null) return Enumerable.Empty<T>();
+            return await _dbSet.Where(predicate).ToListAsync();
         }
 
         public virtual async Task DeleteAsync(int id)

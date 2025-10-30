@@ -5,7 +5,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace CreaPrintDatabase.Repositories;
 
-public class BasketRepository : GenericRepository<Basket>, IBasketRepository
+public class BasketRepository : BaseRepository<Basket>, IBasketRepository
 {
  private readonly CreaPrintDbContext _dbContext;
  public BasketRepository(CreaPrintDbContext context) : base(context)

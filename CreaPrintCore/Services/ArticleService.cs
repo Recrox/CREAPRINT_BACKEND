@@ -31,16 +31,12 @@ namespace CreaPrintCore.Services
             return await _repository.CreateAsync(article);
         }
 
-        public async Task<bool> UpdateAsync(int id, Article article)
+        public async Task<Article?> UpdateAsync(int id, Article article)
         {
-            if (id != article.Id) return false;
+            if (id != article.Id) return null;
 
-            // apply audit
-            article.UpdatedOn = DateTime.UtcNow;
-
-            // update directly without re-fetching the existing entity
-            await _repository.UpdateAsync(article);
-            return true;
+            var updated = await _repository.UpdateAndGetAsync(article);
+            return updated;
         }
 
         public async Task DeleteAsync(int id)
@@ -56,6 +52,11 @@ namespace CreaPrintCore.Services
         public async Task<int> GetCountAsync(Func<Article, bool>? filter = null)
         {
             return await _repository.GetCountAsync(filter);
+        }
+
+        public async Task<IEnumerable<Article>> GetByTitleAsync(string title)
+        {
+            return await _repository.GetByTitleAsync(title);
         }
     }
 }

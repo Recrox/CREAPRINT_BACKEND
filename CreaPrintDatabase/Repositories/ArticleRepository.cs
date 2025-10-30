@@ -5,7 +5,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace CreaPrintDatabase.Repositories;
 
-public class ArticleRepository : GenericRepository<Article>, IArticleRepository
+public class ArticleRepository : BaseRepository<Article>, IArticleRepository
 {
     private readonly CreaPrintDbContext _dbContext;
     public ArticleRepository(CreaPrintDbContext context) : base(context)
@@ -30,11 +30,11 @@ public class ArticleRepository : GenericRepository<Article>, IArticleRepository
             .FirstOrDefaultAsync(a => a.Id == id);
     }
 
-    //public async Task<int> GetCountAsync(Func<Article, bool>? filter = null)
-    //{
-    //    if (filter == null)
-    //        return await _dbContext.Articles.CountAsync();
-    //    else
-    //        return await Task.FromResult(_dbContext.Articles.Count(filter));
-    //}
+    // helper: search by title using base FindAsync
+    public async Task<IEnumerable<Article>> GetByTitleAsync(string title)
+    {
+        if (string.IsNullOrWhiteSpace(title)) return Enumerable.Empty<Article>();
+        var normalized = title.Trim();
+        return await FindAsync(a => EF.Functions.Like(a.Title, $"%{normalized}%"));
+    }
 }

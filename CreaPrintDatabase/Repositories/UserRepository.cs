@@ -5,7 +5,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace CreaPrintDatabase.Repositories;
 
-public class UserRepository : GenericRepository<User>, IUserRepository
+public class UserRepository : BaseRepository<User>, IUserRepository
 {
     private readonly CreaPrintDbContext _dbContext;
     public UserRepository(CreaPrintDbContext context) : base(context)
