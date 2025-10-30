@@ -11,6 +11,7 @@ namespace CreaPrintCore.Setup
             services.AddScoped<IArticleService, ArticleService>();
             services.AddScoped<IUserService, UserService>();
             services.AddScoped<CurrentUser>();
+            services.AddScoped<IBasketService, BasketService>();
             // Ajoute ici d'autres services du core si besoin
             return services;
         }

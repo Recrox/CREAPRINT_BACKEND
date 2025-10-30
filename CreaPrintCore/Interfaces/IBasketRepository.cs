@@ -1,0 +1,15 @@
+using System.Collections.Generic;
+using System.Threading.Tasks;
+using CreaPrintCore.Models;
+
+namespace CreaPrintCore.Interfaces
+{
+ public interface IBasketRepository
+ {
+ Task<Basket?> GetByUserIdAsync(int userId);
+ Task<Basket> CreateAsync(Basket basket);
+ Task UpdateAsync(Basket basket);
+ Task AddItemAsync(BasketItem item);
+ Task RemoveItemAsync(int itemId);
+ }
+}

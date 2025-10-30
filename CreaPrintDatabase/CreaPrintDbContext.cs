@@ -10,6 +10,8 @@ namespace CreaPrintDatabase
         public DbSet<Article> Articles { get; set; }
         public DbSet<Category> Categories { get; set; }
         public DbSet<User> Users { get; set; }
+        public DbSet<Basket> Baskets { get; set; }
+        public DbSet<BasketItem> BasketItems { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -20,6 +22,12 @@ namespace CreaPrintDatabase
             .WithMany(c => c.Articles)
             .HasForeignKey(a => a.CategoryId)
             .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<Basket>()
+            .HasMany(b => b.Items)
+            .WithOne(i => i.Basket)
+            .HasForeignKey(i => i.BasketId)
+            .OnDelete(DeleteBehavior.Cascade);
         }
     }
 }

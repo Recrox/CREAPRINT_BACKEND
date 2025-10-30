@@ -29,7 +29,11 @@ Log.Logger = new LoggerConfiguration()
  .WriteTo.File(logsPath, outputTemplate: "[{Timestamp:yyyyMMdd_HH:mm:ss} {Level:u3}] {Message:lj}{NewLine}{Exception}")
  .CreateLogger();
 
-// NOTE: don't call builder.Host.UseSerilog() to avoid extension method mismatch in this environment
+// integrate Serilog with generic host logging so Microsoft ILogger logs go to Serilog
+// NOTE: avoid UseSerilog extension mismatch in this environment
+builder.Logging.ClearProviders();
+builder.Logging.AddSerilog(Log.Logger, dispose: true);
+
 // register logger instance in DI so it can be resolved from RequestServices
 builder.Services.AddSingleton<Serilog.ILogger>(Log.Logger);
 
@@ -42,29 +46,31 @@ builder.Services.AddCoreServices();
 // Register token blacklist (in-memory)
 builder.Services.AddSingleton<ITokenBlacklist, InMemoryTokenBlacklist>();
 
+// Register basket repository and service are handled by AddDatabaseRepositories/AddCoreServices changes
+
 // Lecture des AllowedHosts pour CORS
 IEnumerable<string> allowedHosts = builder.Configuration["AllowedHosts"]?.Split(';', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries) ?? [];
 
 builder.Services.AddCors(options =>
 {
-    options.AddDefaultPolicy(policy =>
-    {
-        policy.WithOrigins(allowedHosts.ToArray())
-     .AllowAnyHeader()
-     .AllowAnyMethod();
-    });
+ options.AddDefaultPolicy(policy =>
+ {
+ policy.WithOrigins(allowedHosts.ToArray())
+ .AllowAnyHeader()
+ .AllowAnyMethod();
+ });
 });
 
 // Choix du provider de base de données (InMemory pour dev, SQL Server pour prod)
 if (builder.Environment.IsDevelopment())
 {
-    builder.Services.AddDbContext<CreaPrintDbContext>(options =>
-    options.UseInMemoryDatabase("MockDb"));
+ builder.Services.AddDbContext<CreaPrintDbContext>(options =>
+ options.UseInMemoryDatabase("MockDb"));
 }
 else
 {
-    builder.Services.AddDbContext<CreaPrintDbContext>(options =>
-    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+ builder.Services.AddDbContext<CreaPrintDbContext>(options =>
+ options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 }
 
 builder.Services.AddControllers()
@@ -173,7 +179,7 @@ builder.Services.AddAuthorization(options =>
 var app = builder.Build();
 
 // Initialisation de la base InMemory avec des articles de test (dev uniquement)
-addFakeDB(app);
+CreaPrintApi.Setup.DevDatabaseSeeder.SeedFakeData(app);
 
 // Pipeline HTTP
 if (app.Environment.IsDevelopment())
@@ -223,41 +229,3 @@ app.MapGet("/", context =>
 });
 
 app.Run();
-
-static void addFakeDB(WebApplication app)
-{
-
-    // Initialisation de la base InMemory avec des articles de test (dev uniquement)
-    if (app.Environment.IsDevelopment())
-    {
-        using var scope = app.Services.CreateScope();
-        var db = scope.ServiceProvider.GetRequiredService<CreaPrintDbContext>();
-        var userService = scope.ServiceProvider.GetRequiredService<CreaPrintCore.Interfaces.IUserService>();
-        if (!db.Articles.Any())
-        {
-
-            var testCategory = new Category { Name = "Test" };
-            var demoCategory = new Category { Name = "Demo" };
-            db.Categories.AddRange(testCategory, demoCategory);
-            db.SaveChanges();
-
-            db.Articles.AddRange(new[]
-            {
- new Article { Title = "Premier article", Content = "Contenu de test", CategoryId = testCategory.Id, Category = testCategory, CreatedOn = DateTime.Now, Price =10.99m },
- new Article { Title = "Second article", Content = "Encore du contenu", CategoryId = demoCategory.Id, Category = demoCategory, CreatedOn = DateTime.Now, Price =15.50m },
- new Article { Title = "3 iem article", Content = "Contenu de test", CategoryId = testCategory.Id, Category = testCategory, CreatedOn = DateTime.Now, Price =8.75m },
- new Article { Title = "4 iem article", Content = "Encore du contenu", CategoryId = demoCategory.Id, Category = demoCategory, CreatedOn = DateTime.Now, Price =12.00m },
- new Article { Title = "5 iem article", Content = "Contenu de test", CategoryId = testCategory.Id, Category = testCategory, CreatedOn = DateTime.Now, Price =9.99m },
- new Article { Title = "6 iem article", Content = "Encore du contenu", CategoryId = demoCategory.Id, Category = demoCategory, CreatedOn = DateTime.Now, Price =20.00m },
- });
-            db.SaveChanges();
-        }
-
-        // create fake admin user if not exists
-        if (!db.Users.Any())
-        {
-            var admin = new CreaPrintCore.Models.User { Username = "admin", Rights = CreaPrintCore.Models.UserRights.Admin };
-            userService.CreateAsync(admin, "admin123").GetAwaiter().GetResult();
-        }
-    }
-}

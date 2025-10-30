@@ -8,20 +8,25 @@ using System.Security.Claims;
 using System.Text;
 using CreaPrintApi.Services;
 using Serilog;
+using System.Linq;
+using CreaPrintCore.Services;
 
 namespace CreaPrintApi.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
-public class UserController : ControllerBase
+public class UserController : BaseController
 {
     private readonly IUserService _service;
+    private readonly IUserRepository _userRepo;
     private readonly IConfiguration _configuration;
     private readonly ITokenBlacklist _blacklist;
 
-    public UserController(IUserService service, IConfiguration configuration, ITokenBlacklist blacklist)
+    public UserController(CurrentUser currentUser, IUserService service, IUserRepository userRepo, IConfiguration configuration, ITokenBlacklist blacklist)
+        : base(currentUser)
     {
         _service = service;
+        _userRepo = userRepo;
         _configuration = configuration;
         _blacklist = blacklist;
     }
@@ -77,6 +82,16 @@ public class UserController : ControllerBase
     {
         var users = await _service.GetAllAsync();
         return Ok(users.Select(u => new { u.Id, u.Username }));
+    }
+
+    // Simple GET by id: GET /api/user/{id}
+    [HttpGet("{id}")]
+    //[Authorize]
+    public async Task<ActionResult<object>> GetById(int id)
+    {
+        var user = await _userRepo.GetByIdAsync(id);
+        if (user == null) return NotFound();
+        return Ok(new { user.Id, user.Username });
     }
 
     // Logout endpoint: revokes the current bearer token
