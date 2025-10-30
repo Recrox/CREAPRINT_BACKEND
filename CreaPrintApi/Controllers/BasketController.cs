@@ -1,7 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using CreaPrintCore.Interfaces;
 using CreaPrintCore.Models;
-using Microsoft.AspNetCore.Authorization;
 using CreaPrintCore.Services;
 
 namespace CreaPrintApi.Controllers;
@@ -20,7 +19,7 @@ public class BasketController : BaseController
 
  // Get current user's basket
  [HttpGet("me")]
- [Authorize]
+ //[Authorize]
  public async Task<IActionResult> GetMyBasket()
  {
  var user = CurrentUser;
@@ -34,7 +33,7 @@ public class BasketController : BaseController
 
  // Add item to current user's basket
  [HttpPost("me/items")]
- [Authorize]
+ //[Authorize]
  public async Task<IActionResult> AddItemToMyBasket([FromBody] AddItemRequest request)
  {
  var user = CurrentUser;
@@ -55,7 +54,7 @@ public class BasketController : BaseController
 
  // Remove item
  [HttpDelete("me/items/{itemId}")]
- [Authorize]
+ //[Authorize]
  public async Task<IActionResult> RemoveItem(int itemId)
  {
  var user = CurrentUser;

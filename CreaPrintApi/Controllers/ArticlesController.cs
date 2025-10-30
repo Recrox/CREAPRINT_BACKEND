@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using CreaPrintCore.Interfaces;
 using CreaPrintCore.Models;
 using CreaPrintCore.Services;
+using Microsoft.AspNetCore.Authorization;
 
 namespace CreaPrintApi.Controllers;
 
@@ -17,6 +18,7 @@ public class ArticlesController : BaseController
     }
 
     [HttpGet]
+    [Authorize]
     public async Task<ActionResult<IEnumerable<Article>>> GetAll()
     {
         // example access to CurrentUser in controller
@@ -77,6 +79,7 @@ public class ArticlesController : BaseController
     }
 
     [HttpGet("paged")]
+    //[Authorize("AdminOnly")]
     public async Task<ActionResult<IEnumerable<Article>>> GetPaged([FromQuery] int page = 0, [FromQuery] int pageSize = 10)
     {
         var articles = await _service.GetPagedAsync(page, pageSize);
