@@ -1,7 +1,6 @@
-namespace CreaPrintCore.Models
+namespace CreaPrintCore.Models;
+
+public abstract class BaseEntity
 {
- public abstract class BaseEntity
- {
- public int Id { get; set; }
- }
+public int Id { get; set; }
 }
