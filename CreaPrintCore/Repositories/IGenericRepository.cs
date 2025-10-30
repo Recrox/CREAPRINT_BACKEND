@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using CreaPrintCore.Models;
@@ -12,5 +13,6 @@ namespace CreaPrintCore.Repositories
  Task UpdateAsync(T entity);
  Task DeleteAsync(int id);
  Task<int> GetCountAsync(Func<T, bool>? filter = null);
+ Task<IEnumerable<T>> GetPagedAsync(int page, int pageSize);
  }
 }

@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 
@@ -10,5 +11,7 @@ namespace CreaPrintCore.Interfaces
  Task<Models.Article> CreateAsync(Models.Article article);
  Task<IEnumerable<Models.Article>> GetPagedAsync(int page, int pageSize);
  Task<int> GetCountAsync(Func<Models.Article, bool>? filter = null);
+ Task<bool> UpdateAsync(int id, Models.Article article);
+ Task DeleteAsync(int id);
  }
 }

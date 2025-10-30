@@ -25,7 +25,25 @@ namespace CreaPrintCore.Services
 
  public async Task<Article> CreateAsync(Article article)
  {
+ article.CreatedOn = DateTime.UtcNow;
  return await _repository.CreateAsync(article);
+ }
+
+ public async Task<bool> UpdateAsync(int id, Article article)
+ {
+ if (id != article.Id) return false;
+
+ // apply audit
+ article.UpdatedOn = DateTime.UtcNow;
+
+ // update directly without re-fetching the existing entity
+ await _repository.UpdateAsync(article);
+ return true;
+ }
+
+ public async Task DeleteAsync(int id)
+ {
+ await _repository.DeleteAsync(id);
  }
 
  public async Task<IEnumerable<Article>> GetPagedAsync(int page, int pageSize)

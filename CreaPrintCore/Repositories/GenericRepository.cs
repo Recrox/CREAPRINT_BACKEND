@@ -26,6 +26,12 @@ namespace CreaPrintCore.Repositories
 
  public virtual async Task<T> CreateAsync(T entity)
  {
+ // if entity supports audit, set CreatedOn
+ if (entity is AuditableEntity aud)
+ {
+ aud.CreatedOn = DateTime.UtcNow;
+ }
+
  _dbSet.Add(entity);
  await _context.SaveChangesAsync();
  return entity;
@@ -33,6 +39,12 @@ namespace CreaPrintCore.Repositories
 
  public virtual async Task UpdateAsync(T entity)
  {
+ // if entity supports audit, set UpdatedOn
+ if (entity is AuditableEntity aud)
+ {
+ aud.UpdatedOn = DateTime.UtcNow;
+ }
+
  _dbSet.Update(entity);
  await _context.SaveChangesAsync();
  }
@@ -49,7 +61,7 @@ namespace CreaPrintCore.Repositories
 
  public virtual async Task<IEnumerable<T>> GetPagedAsync(int page, int pageSize)
  {
- return await _dbSet.Skip((page -1) * pageSize).Take(pageSize).ToListAsync();
+ return await _dbSet.Skip(page * pageSize).Take(pageSize).ToListAsync();
  }
 
  public virtual async Task<int> GetCountAsync(Func<T, bool>? filter = null)

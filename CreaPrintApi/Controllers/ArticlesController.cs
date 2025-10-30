@@ -37,6 +37,24 @@ public class ArticlesController : ControllerBase
         return CreatedAtAction(nameof(GetById), new { id = created.Id }, created);
     }
 
+    [HttpPut("{id}")]
+    public async Task<IActionResult> Update(int id, CoreArticle article)
+    {
+        if (id != article.Id) return BadRequest();
+        var updated = await _service.UpdateAsync(id, article);
+        if (!updated) return NotFound();
+        return NoContent();
+    }
+
+    [HttpDelete("{id}")]
+    public async Task<IActionResult> Delete(int id)
+    {
+        var existing = await _service.GetByIdAsync(id);
+        if (existing == null) return NotFound();
+        await _service.DeleteAsync(id);
+        return NoContent();
+    }
+
     [HttpGet("paged")]
     public async Task<ActionResult<IEnumerable<CoreArticle>>> GetPaged([FromQuery] int page = 0, [FromQuery] int pageSize = 10)
     {
