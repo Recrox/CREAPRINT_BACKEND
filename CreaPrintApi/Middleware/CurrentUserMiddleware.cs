@@ -64,34 +64,6 @@ public class CurrentUserMiddleware
                     }
                 }
             }
-
-            // If not resolved by id, try username claims
-            if (currentUser.User == null)
-            {
-                var usernameCandidates = new[]
-                {
-                    ClaimTypes.Name,
-                    ClaimTypes.Upn,
-                    "unique_name",
-                    System.IdentityModel.Tokens.Jwt.JwtRegisteredClaimNames.UniqueName,
-                    "preferred_username",
-                    "email",
-                    "username"
-                };
-
-                foreach (var claimName in usernameCandidates)
-                {
-                    var claim = context.User.FindFirst(claimName);
-                    if (claim == null || string.IsNullOrWhiteSpace(claim.Value)) continue;
-
-                    var userByName = await userRepo.GetByUsernameAsync(claim.Value);
-                    if (userByName != null)
-                    {
-                        currentUser.User = userByName;
-                        break;
-                    }
-                }
-            }
         }
         catch (Exception ex)
         {
