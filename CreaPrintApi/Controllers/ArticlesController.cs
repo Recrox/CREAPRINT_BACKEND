@@ -21,10 +21,6 @@ public class ArticlesController : BaseController
     [Authorize]
     public async Task<ActionResult<IEnumerable<Article>>> GetAll()
     {
-        // example access to CurrentUser in controller
-
-        var me = CurrentUser; // may be null if anonymous
-
         var articles = await _service.GetAllAsync();
         return Ok(articles);
     }

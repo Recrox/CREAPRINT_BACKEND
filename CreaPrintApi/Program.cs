@@ -14,6 +14,10 @@ using CreaPrintApi.Services;
 using System.IdentityModel.Tokens.Jwt;
 using Serilog;
 using System.Diagnostics;
+using System.Text.Json.Serialization;
+using Newtonsoft.Json.Converters;
+using Microsoft.OpenApi.Any;
+using Microsoft.OpenApi.Models;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -77,11 +81,15 @@ builder.Services.AddControllers()
  .AddJsonOptions(options =>
  {
      options.JsonSerializerOptions.ReferenceHandler = System.Text.Json.Serialization.ReferenceHandler.IgnoreCycles;
+     // Serialize enums as strings for System.Text.Json
+     options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
  })
  .AddNewtonsoftJson(options =>
  {
      // Ensure Newtonsoft ignores reference loops for JsonPatch and swagger generation
      options.SerializerSettings.ReferenceLoopHandling = Newtonsoft.Json.ReferenceLoopHandling.Ignore;
+     // Serialize enums as strings for Newtonsoft
+     options.SerializerSettings.Converters.Add(new Newtonsoft.Json.Converters.StringEnumConverter());
  });
 builder.Services.AddAutoMapper(typeof(CreaPrintApi.Dtos.MappingProfile));
 builder.Services.AddEndpointsApiExplorer();
@@ -134,6 +142,9 @@ builder.Services.AddSwaggerGen(options =>
  }, new[] { "api" }
  }
  });
+
+ // Ensure enums are represented as strings in Swagger schema
+ options.SchemaFilter<CreaPrintApi.Swagger.EnumSchemaFilter>();
 });
 
 // Configure FluentValidation
