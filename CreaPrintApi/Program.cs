@@ -57,19 +57,10 @@ builder.Services.AddControllers()
 builder.Services.AddAutoMapper(typeof(CreaPrintApi.Dtos.MappingProfile));
 builder.Services.AddEndpointsApiExplorer();
 
-// Configure Swagger with Bearer auth so the UI shows an Authorize button
+// Configure Swagger (removed Bearer security definition)
 builder.Services.AddSwaggerGen(options =>
 {
  options.CustomSchemaIds(type => type.FullName);
- options.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
- {
- Description = "JWT Authorization header using the Bearer scheme. Example: 'Bearer {token}'",
- Name = "Authorization",
- In = ParameterLocation.Header,
- Type = SecuritySchemeType.Http,
- Scheme = "bearer",
- BearerFormat = "JWT"
- });
  // OAuth2 password grant flow for Swagger UI
  options.AddSecurityDefinition("oauth2", new OpenApiSecurityScheme
  {
@@ -84,13 +75,6 @@ builder.Services.AddSwaggerGen(options =>
  { "api", "Access API" }
  }
  }
- }
- });
- options.AddSecurityRequirement(new OpenApiSecurityRequirement{
- {
- new OpenApiSecurityScheme{
- Reference = new OpenApiReference{ Type = ReferenceType.SecurityScheme, Id = "Bearer" }
- }, new string[] { }
  }
  });
 });
@@ -183,6 +167,7 @@ static void addFakeDB(WebApplication app)
         var userService = scope.ServiceProvider.GetRequiredService<CreaPrintCore.Interfaces.IUserService>();
         if (!db.Articles.Any())
         {
+
             var testCategory = new Category { Name = "Test" };
             var demoCategory = new Category { Name = "Demo" };
             db.Categories.AddRange(testCategory, demoCategory);

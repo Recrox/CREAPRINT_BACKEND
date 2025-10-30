@@ -2,16 +2,16 @@ using Microsoft.AspNetCore.JsonPatch;
 using Microsoft.AspNetCore.Mvc;
 using CreaPrintCore.Interfaces;
 using CreaPrintCore.Models;
+using CreaPrintCore.Services;
 
 namespace CreaPrintApi.Controllers;
 
-[ApiController]
 [Route("api/[controller]")]
-public class ArticlesController : ControllerBase
+public class ArticlesController : BaseController
 {
     private readonly IArticleService _service;
 
-    public ArticlesController(IArticleService service)
+    public ArticlesController(IArticleService service, CurrentUser currentUser) : base(currentUser)
     {
         _service = service;
     }
@@ -19,6 +19,10 @@ public class ArticlesController : ControllerBase
     [HttpGet]
     public async Task<ActionResult<IEnumerable<Article>>> GetAll()
     {
+        // example access to CurrentUser in controller
+
+        var me = CurrentUser; // may be null if anonymous
+
         var articles = await _service.GetAllAsync();
         return Ok(articles);
     }
