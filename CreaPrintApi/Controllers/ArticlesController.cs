@@ -80,10 +80,9 @@ public class ArticlesController : BaseController
     [HttpDelete("{id}")]
     public async Task<IActionResult> Delete(int id)
     {
-        var existing = await _service.GetByIdAsync(id);
-        if (existing == null) return NotFound();
-        await _service.DeleteAsync(id);
-        return NoContent();
+        bool isDeleted = await _service.DeleteAsync(id);
+        if (!isDeleted) return NotFound();
+        return Ok(isDeleted);
     }
 
     [HttpGet("paged")]

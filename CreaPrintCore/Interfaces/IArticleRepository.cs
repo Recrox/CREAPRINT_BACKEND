@@ -15,6 +15,6 @@ namespace CreaPrintCore.Interfaces
         Task UpdateAsync(Article article);
         Task<Article?> UpdateAndGetAsync(Article article);
         Task<IEnumerable<Article>> GetByTitleAsync(string title);
-        Task DeleteAsync(int id);
+        Task<bool> DeleteAsync(int id);
     }
 }

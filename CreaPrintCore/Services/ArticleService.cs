@@ -39,10 +39,7 @@ namespace CreaPrintCore.Services
             return updated;
         }
 
-        public async Task DeleteAsync(int id)
-        {
-            await _repository.DeleteAsync(id);
-        }
+        public async Task<bool> DeleteAsync(int id) => await _repository.DeleteAsync(id);
 
         public async Task<IEnumerable<Article>> GetPagedAsync(int page, int pageSize)
         {

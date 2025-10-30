@@ -74,14 +74,14 @@ namespace CreaPrintCore.Repositories
             return await _dbSet.Where(predicate).ToListAsync();
         }
 
-        public virtual async Task DeleteAsync(int id)
+        public virtual async Task<bool> DeleteAsync(int id)
         {
             var entity = await GetByIdAsync(id);
-            if (entity != null)
-            {
-                _dbSet.Remove(entity);
-                await _context.SaveChangesAsync();
-            }
+            if (entity == null) return false;
+
+            _dbSet.Remove(entity);
+            await _context.SaveChangesAsync();
+            return true;
         }
 
         public virtual async Task<IEnumerable<T>> GetPagedAsync(int page, int pageSize)

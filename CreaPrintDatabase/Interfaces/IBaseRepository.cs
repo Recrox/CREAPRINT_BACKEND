@@ -14,7 +14,7 @@ namespace CreaPrintCore.Repositories
         Task UpdateAsync(T entity);
         Task<T?> UpdateAndGetAsync(T entity);
         Task<IEnumerable<T>> FindAsync(Expression<Func<T, bool>> predicate);
-        Task DeleteAsync(int id);
+        Task<bool> DeleteAsync(int id);
         Task<int> GetCountAsync(Func<T, bool>? filter = null);
         Task<IEnumerable<T>> GetPagedAsync(int page, int pageSize);
     }
