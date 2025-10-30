@@ -106,6 +106,34 @@ builder.Services.AddSwaggerGen(options =>
             }
         }
     });
+
+ // Also add a simple Bearer scheme so the user can paste a token via the Authorize button
+ options.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
+ {
+ Description = "JWT Authorization header using the Bearer scheme. Example: \"Bearer {token}\"",
+ Name = "Authorization",
+ In = ParameterLocation.Header,
+ Type = SecuritySchemeType.Http,
+ Scheme = "bearer",
+ BearerFormat = "JWT"
+ });
+
+ // Apply both schemes globally (so endpoints show lock icon)
+ options.AddSecurityRequirement(new OpenApiSecurityRequirement
+ {
+ {
+ new OpenApiSecurityScheme
+ {
+ Reference = new OpenApiReference { Type = ReferenceType.SecurityScheme, Id = "Bearer" }
+ }, new string[] { }
+ },
+ {
+ new OpenApiSecurityScheme
+ {
+ Reference = new OpenApiReference { Type = ReferenceType.SecurityScheme, Id = "oauth2" }
+ }, new[] { "api" }
+ }
+ });
 });
 
 // Configure FluentValidation

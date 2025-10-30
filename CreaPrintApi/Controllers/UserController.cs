@@ -120,7 +120,10 @@ public class UserController : BaseController
         var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
 
         var claims = new[] {
+ // include both JWT standard claims and System.Security.Claims types to ensure availability
+ new Claim(System.Security.Claims.ClaimTypes.NameIdentifier, user.Id.ToString()),
  new Claim(JwtRegisteredClaimNames.Sub, user.Id.ToString()),
+ new Claim(System.Security.Claims.ClaimTypes.Name, user.Username),
  new Claim(JwtRegisteredClaimNames.UniqueName, user.Username),
  new Claim("rights", ((int)user.Rights).ToString())
  };
