@@ -1,6 +1,6 @@
 namespace CreaPrintConfiguration.Settings
 {
- public class DatabaseSettings
+ public class GlobalSettings
  {
  public string ConnectionString { get; set; } = string.Empty;
  }
