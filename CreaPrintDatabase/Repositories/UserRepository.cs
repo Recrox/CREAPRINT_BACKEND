@@ -18,6 +18,11 @@ public class UserRepository : GenericRepository<User>, IUserRepository
  return await _dbContext.Users.FirstOrDefaultAsync(u => u.Username == username);
  }
 
+ public async Task<User?> GetByIdAsync(int id)
+ {
+ return await _dbContext.Users.FindAsync(id);
+ }
+
  public async Task<User> CreateAsync(User user)
  {
  return await base.CreateAsync(user);

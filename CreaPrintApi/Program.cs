@@ -138,6 +138,7 @@ builder.Services.AddAuthorization(options =>
 
 var app = builder.Build();
 
+// Initialisation de la base InMemory avec des articles de test (dev uniquement)
 addFakeDB(app);
 
 // Pipeline HTTP
@@ -156,6 +157,10 @@ if (app.Environment.IsDevelopment())
 app.UseHttpsRedirection();
 app.UseCors(); // Ajout du middleware CORS
 app.UseAuthentication();
+
+// CurrentUser middleware must run after authentication so HttpContext.User is populated
+app.UseMiddleware<CreaPrintApi.Middleware.CurrentUserMiddleware>();
+
 app.UseAuthorization();
 app.MapControllers();
 
