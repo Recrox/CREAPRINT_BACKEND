@@ -7,6 +7,7 @@ using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
 using CreaPrintApi.Services;
+using Serilog;
 
 namespace CreaPrintApi.Controllers;
 
@@ -29,10 +30,23 @@ public class UserController : ControllerBase
  public async Task<ActionResult> Authenticate([FromBody] LoginRequest request)
  {
  var user = await _service.AuthenticateAsync(request.Username, request.Password);
- if (user == null) return Unauthorized();
+ if (user == null)
+ {
+ Log.Logger.Information("Failed login for {Username}", request.Username);
+ return Unauthorized();
+ }
 
  var tokenStr = GenerateToken(user);
+ Log.Logger.Information("User {Username} authenticated", request.Username);
  return Ok(new { token = tokenStr });
+ }
+
+ // Alias endpoint: POST /api/user/login
+ [HttpPost("login")]
+ public async Task<ActionResult> Login([FromBody] LoginRequest request)
+ {
+ // re-use same logic as Authenticate
+ return await Authenticate(request);
  }
 
  // OAuth2 token endpoint (password flow) - accepts form data
@@ -80,6 +94,7 @@ public class UserController : ControllerBase
 
  var token = parts[1];
  _blacklist.RevokeToken(token);
+ Log.Logger.Information("Token revoked for request by {User}", User?.Identity?.Name ?? "unknown");
  return NoContent();
  }
 
