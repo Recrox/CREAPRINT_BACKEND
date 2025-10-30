@@ -60,3 +60,6 @@ nunit-*.xml
 *.copilot.*
 copilot-*.json
 copilot-*.log
+
+# Application logs
+CreaPrintApi/_Logs/

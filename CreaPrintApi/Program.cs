@@ -12,8 +12,26 @@ using System.Text;
 using Microsoft.IdentityModel.Tokens;
 using CreaPrintApi.Services;
 using System.IdentityModel.Tokens.Jwt;
+using Serilog;
+using System.Diagnostics;
 
 var builder = WebApplication.CreateBuilder(args);
+
+// Ensure logs directory exists
+var logsDir = Path.Combine(builder.Environment.ContentRootPath, "_Logs");
+Directory.CreateDirectory(logsDir);
+
+// Configure Serilog: create file with format like log-202510_02.txt (yyyyMM_dd)
+var fileName = $"log-{DateTime.UtcNow:yyyyMM_dd}.txt";
+var logsPath = Path.Combine(logsDir, fileName);
+Log.Logger = new LoggerConfiguration()
+ .MinimumLevel.Debug()
+ .WriteTo.File(logsPath, outputTemplate: "[{Timestamp:yyyyMMdd_HH:mm:ss} {Level:u3}] {Message:lj}{NewLine}{Exception}")
+ .CreateLogger();
+
+// NOTE: don't call builder.Host.UseSerilog() to avoid extension method mismatch in this environment
+// register logger instance in DI so it can be resolved from RequestServices
+builder.Services.AddSingleton<Serilog.ILogger>(Log.Logger);
 
 // Configuration des services
 builder.Services.AddGlobalConfiguration(builder.Configuration);
@@ -119,13 +137,16 @@ builder.Services.AddAuthentication(options =>
  },
  OnTokenValidated = context =>
  {
+ var logger = context.HttpContext.RequestServices.GetService<Serilog.ILogger>() ?? Log.Logger;
  var blacklist = context.HttpContext.RequestServices.GetService<ITokenBlacklist>();
  var token = context.SecurityToken as JwtSecurityToken;
+ var raw = context.Request.Headers["Authorization"].FirstOrDefault()?.Split(' ').Last();
+ logger.Information("Token validated for {Path}, token present: {HasToken}", context.HttpContext.Request.Path, !string.IsNullOrEmpty(raw));
  if (token != null && blacklist != null)
  {
- var raw = context.Request.Headers["Authorization"].FirstOrDefault()?.Split(' ').Last();
- if (blacklist.IsRevoked(raw))
+ if (blacklist.IsRevoked(raw ?? string.Empty))
  {
+ logger.Warning("Rejected revoked token for {Path}", context.HttpContext.Request.Path);
  context.Fail("Token revoked");
  }
  }
@@ -169,6 +190,23 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 app.UseCors(); // Ajout du middleware CORS
+
+// Simple explicit request-logging middleware to guarantee entries for each request
+app.Use(async (context, next) =>
+{
+ var sw = Stopwatch.StartNew();
+ Log.Logger.Information("Incoming {Method} {Path}", context.Request.Method, context.Request.Path);
+ try
+ {
+ await next();
+ }
+ finally
+ {
+ sw.Stop();
+ Log.Logger.Information("Finished {Method} {Path} responded {StatusCode} in {Elapsed}ms", context.Request.Method, context.Request.Path, context.Response.StatusCode, sw.Elapsed.TotalMilliseconds);
+ }
+});
+
 app.UseAuthentication();
 
 // CurrentUser middleware must run after authentication so HttpContext.User is populated
@@ -188,22 +226,22 @@ app.Run();
 static void addFakeDB(WebApplication app)
 {
 
-    // Initialisation de la base InMemory avec des articles de test (dev uniquement)
-    if (app.Environment.IsDevelopment())
-    {
-        using var scope = app.Services.CreateScope();
-        var db = scope.ServiceProvider.GetRequiredService<CreaPrintDbContext>();
-        var userService = scope.ServiceProvider.GetRequiredService<CreaPrintCore.Interfaces.IUserService>();
-        if (!db.Articles.Any())
-        {
+ // Initialisation de la base InMemory avec des articles de test (dev uniquement)
+ if (app.Environment.IsDevelopment())
+ {
+ using var scope = app.Services.CreateScope();
+ var db = scope.ServiceProvider.GetRequiredService<CreaPrintDbContext>();
+ var userService = scope.ServiceProvider.GetRequiredService<CreaPrintCore.Interfaces.IUserService>();
+ if (!db.Articles.Any())
+ {
 
-            var testCategory = new Category { Name = "Test" };
-            var demoCategory = new Category { Name = "Demo" };
-            db.Categories.AddRange(testCategory, demoCategory);
-            db.SaveChanges();
+ var testCategory = new Category { Name = "Test" };
+ var demoCategory = new Category { Name = "Demo" };
+ db.Categories.AddRange(testCategory, demoCategory);
+ db.SaveChanges();
 
-            db.Articles.AddRange(new[]
-            {
+ db.Articles.AddRange(new[]
+ {
  new Article { Title = "Premier article", Content = "Contenu de test", CategoryId = testCategory.Id, Category = testCategory, CreatedOn = DateTime.Now, Price =10.99m },
  new Article { Title = "Second article", Content = "Encore du contenu", CategoryId = demoCategory.Id, Category = demoCategory, CreatedOn = DateTime.Now, Price =15.50m },
  new Article { Title = "3 iem article", Content = "Contenu de test", CategoryId = testCategory.Id, Category = testCategory, CreatedOn = DateTime.Now, Price =8.75m },
@@ -211,14 +249,14 @@ static void addFakeDB(WebApplication app)
  new Article { Title = "5 iem article", Content = "Contenu de test", CategoryId = testCategory.Id, Category = testCategory, CreatedOn = DateTime.Now, Price =9.99m },
  new Article { Title = "6 iem article", Content = "Encore du contenu", CategoryId = demoCategory.Id, Category = demoCategory, CreatedOn = DateTime.Now, Price =20.00m },
  });
-            db.SaveChanges();
-        }
+ db.SaveChanges();
+ }
 
-        // create fake admin user if not exists
-        if (!db.Users.Any())
-        {
-            var admin = new CreaPrintCore.Models.User { Username = "admin", Rights = CreaPrintCore.Models.UserRights.Admin };
-            userService.CreateAsync(admin, "admin123").GetAwaiter().GetResult();
-        }
-    }
+ // create fake admin user if not exists
+ if (!db.Users.Any())
+ {
+ var admin = new CreaPrintCore.Models.User { Username = "admin", Rights = CreaPrintCore.Models.UserRights.Admin };
+ userService.CreateAsync(admin, "admin123").GetAwaiter().GetResult();
+ }
+ }
 }
