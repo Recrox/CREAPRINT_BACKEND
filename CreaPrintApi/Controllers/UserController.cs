@@ -135,6 +135,17 @@ public class UserController : BaseController
 
         return new JwtSecurityTokenHandler().WriteToken(token);
     }
+
+    // GET /api/user/me - returns the current authenticated user
+    [HttpGet("me")]
+    //[Authorize]
+    public ActionResult<User?> GetCurrentUser()
+    {
+        var user = CurrentUser; // BaseController provides CurrentUser (may be null)
+        if (user == null) return Unauthorized();
+
+        return Ok(user);
+    }
 }
 
 public record LoginRequest(string Username, string Password);
