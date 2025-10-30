@@ -92,20 +92,6 @@ public class CurrentUserMiddleware
                     }
                 }
             }
-
-            // As a last resort, try any numeric claim
-            if (currentUser.User == null)
-            {
-                var numeric = context.User.Claims.FirstOrDefault(c => int.TryParse(c.Value, out _));
-                if (numeric != null && int.TryParse(numeric.Value, out var numericId))
-                {
-                    var userByNumeric = await userRepo.GetByIdAsync(numericId);
-                    if (userByNumeric != null)
-                    {
-                        currentUser.User = userByNumeric;
-                    }
-                }
-            }
         }
         catch (Exception ex)
         {
