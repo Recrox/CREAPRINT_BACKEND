@@ -22,13 +22,13 @@ namespace CreaPrintCore.Services
  if (user == null) return null;
 
  var hash = ComputeHash(password);
- if (hash != user.Password) return null;
+ if (hash != user.PasswordHash) return null;
  return user;
  }
 
  public async Task<User> CreateAsync(User user, string password)
  {
- user.Password = ComputeHash(password);
+ user.PasswordHash = ComputeHash(password);
  return await _repository.CreateAsync(user);
  }
 

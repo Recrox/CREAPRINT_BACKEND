@@ -70,6 +70,22 @@ builder.Services.AddSwaggerGen(options =>
  Scheme = "bearer",
  BearerFormat = "JWT"
  });
+ // OAuth2 password grant flow for Swagger UI
+ options.AddSecurityDefinition("oauth2", new OpenApiSecurityScheme
+ {
+ Type = SecuritySchemeType.OAuth2,
+ Flows = new OpenApiOAuthFlows
+ {
+ Password = new OpenApiOAuthFlow
+ {
+ TokenUrl = new Uri("/api/user/token", UriKind.Relative),
+ Scopes = new Dictionary<string, string>
+ {
+ { "api", "Access API" }
+ }
+ }
+ }
+ });
  options.AddSecurityRequirement(new OpenApiSecurityRequirement{
  {
  new OpenApiSecurityScheme{
@@ -105,40 +121,36 @@ builder.Services.AddAuthentication(options =>
  };
 });
 
-builder.Services.AddAuthorization();
+builder.Services.AddAuthorization(options =>
+{
+ options.AddPolicy("AdminOnly", policy =>
+ {
+ policy.RequireAssertion(context =>
+ {
+ var claim = context.User.FindFirst("rights")?.Value;
+ if (string.IsNullOrEmpty(claim)) return false;
+ if (!int.TryParse(claim, out var rights)) return false;
+ // Admin flag ==1
+ return (rights & (int)UserRights.Admin) == (int)UserRights.Admin;
+ });
+ });
+});
 
 var app = builder.Build();
 
-// Initialisation de la base InMemory avec des articles de test (dev uniquement)
-if (app.Environment.IsDevelopment())
-{
- using var scope = app.Services.CreateScope();
- var db = scope.ServiceProvider.GetRequiredService<CreaPrintDbContext>();
- if (!db.Articles.Any())
- {
- var testCategory = new Category { Name = "Test" };
- var demoCategory = new Category { Name = "Demo" };
- db.Categories.AddRange(testCategory, demoCategory);
- db.SaveChanges();
-
- db.Articles.AddRange(new[]
- {
- new Article { Title = "Premier article", Content = "Contenu de test", CategoryId = testCategory.Id, Category = testCategory, CreatedOn = DateTime.Now, Price =10.99m },
- new Article { Title = "Second article", Content = "Encore du contenu", CategoryId = demoCategory.Id, Category = demoCategory, CreatedOn = DateTime.Now, Price =15.50m },
- new Article { Title = "3 iem article", Content = "Contenu de test", CategoryId = testCategory.Id, Category = testCategory, CreatedOn = DateTime.Now, Price =8.75m },
- new Article { Title = "4 iem article", Content = "Encore du contenu", CategoryId = demoCategory.Id, Category = demoCategory, CreatedOn = DateTime.Now, Price =12.00m },
- new Article { Title = "5 iem article", Content = "Contenu de test", CategoryId = testCategory.Id, Category = testCategory, CreatedOn = DateTime.Now, Price =9.99m },
- new Article { Title = "6 iem article", Content = "Encore du contenu", CategoryId = demoCategory.Id, Category = demoCategory, CreatedOn = DateTime.Now, Price =20.00m },
- });
- db.SaveChanges();
- }
-}
+addFakeDB(app);
 
 // Pipeline HTTP
 if (app.Environment.IsDevelopment())
 {
  app.UseSwagger();
- app.UseSwaggerUI();
+ app.UseSwaggerUI(options =>
+ {
+ // Configure OAuth settings so the Swagger UI modal shows username/password for the password flow
+ options.OAuthClientId("swagger-ui");
+ options.OAuthAppName("CreaPrint Swagger UI");
+ options.OAuthUsePkce();
+ });
 }
 
 app.UseHttpsRedirection();
@@ -154,3 +166,40 @@ app.MapGet("/", context => {
 });
 
 app.Run();
+
+static void addFakeDB(WebApplication app)
+{
+
+    // Initialisation de la base InMemory avec des articles de test (dev uniquement)
+    if (app.Environment.IsDevelopment())
+    {
+        using var scope = app.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<CreaPrintDbContext>();
+        var userService = scope.ServiceProvider.GetRequiredService<CreaPrintCore.Interfaces.IUserService>();
+        if (!db.Articles.Any())
+        {
+            var testCategory = new Category { Name = "Test" };
+            var demoCategory = new Category { Name = "Demo" };
+            db.Categories.AddRange(testCategory, demoCategory);
+            db.SaveChanges();
+
+            db.Articles.AddRange(new[]
+            {
+ new Article { Title = "Premier article", Content = "Contenu de test", CategoryId = testCategory.Id, Category = testCategory, CreatedOn = DateTime.Now, Price =10.99m },
+ new Article { Title = "Second article", Content = "Encore du contenu", CategoryId = demoCategory.Id, Category = demoCategory, CreatedOn = DateTime.Now, Price =15.50m },
+ new Article { Title = "3 iem article", Content = "Contenu de test", CategoryId = testCategory.Id, Category = testCategory, CreatedOn = DateTime.Now, Price =8.75m },
+ new Article { Title = "4 iem article", Content = "Encore du contenu", CategoryId = demoCategory.Id, Category = demoCategory, CreatedOn = DateTime.Now, Price =12.00m },
+ new Article { Title = "5 iem article", Content = "Contenu de test", CategoryId = testCategory.Id, Category = testCategory, CreatedOn = DateTime.Now, Price =9.99m },
+ new Article { Title = "6 iem article", Content = "Encore du contenu", CategoryId = demoCategory.Id, Category = demoCategory, CreatedOn = DateTime.Now, Price =20.00m },
+ });
+            db.SaveChanges();
+        }
+
+        // create fake admin user if not exists
+        if (!db.Users.Any())
+        {
+            var admin = new CreaPrintCore.Models.User { Username = "admin", Rights = CreaPrintCore.Models.UserRights.Admin };
+            userService.CreateAsync(admin, "admin123").GetAwaiter().GetResult();
+        }
+    }
+}
