@@ -4,12 +4,12 @@ using CreaPrintConfiguration.Settings;
 
 namespace CreaPrintConfiguration.Setup
 {
- public static class ServiceSetup
- {
- public static IServiceCollection AddGlobalConfiguration(this IServiceCollection services, IConfiguration configuration)
- {
- services.Configure<GlobalSettings>(configuration.GetSection("GlobalSettings"));
- return services;
- }
- }
+    public static class ServiceSetup
+    {
+        public static IServiceCollection AddGlobalConfiguration(this IServiceCollection services, IConfiguration configuration)
+        {
+            services.Configure<GlobalSettings>(configuration.GetSection("GlobalSettings"));
+            return services;
+        }
+    }
 }

@@ -47,35 +47,35 @@ IEnumerable<string> allowedHosts = builder.Configuration["AllowedHosts"]?.Split(
 
 builder.Services.AddCors(options =>
 {
- options.AddDefaultPolicy(policy =>
- {
- policy.WithOrigins(allowedHosts.ToArray())
- .AllowAnyHeader()
- .AllowAnyMethod();
- });
+    options.AddDefaultPolicy(policy =>
+    {
+        policy.WithOrigins(allowedHosts.ToArray())
+     .AllowAnyHeader()
+     .AllowAnyMethod();
+    });
 });
 
 // Choix du provider de base de données (InMemory pour dev, SQL Server pour prod)
 if (builder.Environment.IsDevelopment())
 {
- builder.Services.AddDbContext<CreaPrintDbContext>(options =>
- options.UseInMemoryDatabase("MockDb"));
+    builder.Services.AddDbContext<CreaPrintDbContext>(options =>
+    options.UseInMemoryDatabase("MockDb"));
 }
 else
 {
- builder.Services.AddDbContext<CreaPrintDbContext>(options =>
- options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+    builder.Services.AddDbContext<CreaPrintDbContext>(options =>
+    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 }
 
 builder.Services.AddControllers()
  .AddJsonOptions(options =>
  {
- options.JsonSerializerOptions.ReferenceHandler = System.Text.Json.Serialization.ReferenceHandler.IgnoreCycles;
+     options.JsonSerializerOptions.ReferenceHandler = System.Text.Json.Serialization.ReferenceHandler.IgnoreCycles;
  })
  .AddNewtonsoftJson(options =>
  {
- // Ensure Newtonsoft ignores reference loops for JsonPatch and swagger generation
- options.SerializerSettings.ReferenceLoopHandling = Newtonsoft.Json.ReferenceLoopHandling.Ignore;
+     // Ensure Newtonsoft ignores reference loops for JsonPatch and swagger generation
+     options.SerializerSettings.ReferenceLoopHandling = Newtonsoft.Json.ReferenceLoopHandling.Ignore;
  });
 builder.Services.AddAutoMapper(typeof(CreaPrintApi.Dtos.MappingProfile));
 builder.Services.AddEndpointsApiExplorer();
@@ -83,23 +83,23 @@ builder.Services.AddEndpointsApiExplorer();
 // Configure Swagger (removed Bearer security definition)
 builder.Services.AddSwaggerGen(options =>
 {
- options.CustomSchemaIds(type => type.FullName);
- // OAuth2 password grant flow for Swagger UI
- options.AddSecurityDefinition("oauth2", new OpenApiSecurityScheme
- {
- Type = SecuritySchemeType.OAuth2,
- Flows = new OpenApiOAuthFlows
- {
- Password = new OpenApiOAuthFlow
- {
- TokenUrl = new Uri("/api/user/token", UriKind.Relative),
- Scopes = new Dictionary<string, string>
+    options.CustomSchemaIds(type => type.FullName);
+    // OAuth2 password grant flow for Swagger UI
+    options.AddSecurityDefinition("oauth2", new OpenApiSecurityScheme
+    {
+        Type = SecuritySchemeType.OAuth2,
+        Flows = new OpenApiOAuthFlows
+        {
+            Password = new OpenApiOAuthFlow
+            {
+                TokenUrl = new Uri("/api/user/token", UriKind.Relative),
+                Scopes = new Dictionary<string, string>
  {
  { "api", "Access API" }
  }
- }
- }
- });
+            }
+        }
+    });
 });
 
 // Configure FluentValidation
@@ -112,62 +112,62 @@ var keyBytes = Encoding.UTF8.GetBytes(jwtKey);
 
 builder.Services.AddAuthentication(options =>
 {
- options.DefaultAuthenticateScheme = Microsoft.AspNetCore.Authentication.JwtBearer.JwtBearerDefaults.AuthenticationScheme;
- options.DefaultChallengeScheme = Microsoft.AspNetCore.Authentication.JwtBearer.JwtBearerDefaults.AuthenticationScheme;
+    options.DefaultAuthenticateScheme = Microsoft.AspNetCore.Authentication.JwtBearer.JwtBearerDefaults.AuthenticationScheme;
+    options.DefaultChallengeScheme = Microsoft.AspNetCore.Authentication.JwtBearer.JwtBearerDefaults.AuthenticationScheme;
 })
 .AddJwtBearer(options =>
 {
- options.RequireHttpsMetadata = false;
- options.TokenValidationParameters = new Microsoft.IdentityModel.Tokens.TokenValidationParameters
- {
- ValidateIssuer = false,
- ValidateAudience = false,
- ValidateIssuerSigningKey = true,
- IssuerSigningKey = new SymmetricSecurityKey(keyBytes),
- ValidateLifetime = true
- };
+    options.RequireHttpsMetadata = false;
+    options.TokenValidationParameters = new Microsoft.IdentityModel.Tokens.TokenValidationParameters
+    {
+        ValidateIssuer = false,
+        ValidateAudience = false,
+        ValidateIssuerSigningKey = true,
+        IssuerSigningKey = new SymmetricSecurityKey(keyBytes),
+        ValidateLifetime = true
+    };
 
- // Check token revocation on message received
- options.Events = new Microsoft.AspNetCore.Authentication.JwtBearer.JwtBearerEvents
- {
- OnMessageReceived = context =>
- {
- // allow the token to be read normally
- return Task.CompletedTask;
- },
- OnTokenValidated = context =>
- {
- var logger = context.HttpContext.RequestServices.GetService<Serilog.ILogger>() ?? Log.Logger;
- var blacklist = context.HttpContext.RequestServices.GetService<ITokenBlacklist>();
- var token = context.SecurityToken as JwtSecurityToken;
- var raw = context.Request.Headers["Authorization"].FirstOrDefault()?.Split(' ').Last();
- logger.Information("Token validated for {Path}, token present: {HasToken}", context.HttpContext.Request.Path, !string.IsNullOrEmpty(raw));
- if (token != null && blacklist != null)
- {
- if (blacklist.IsRevoked(raw ?? string.Empty))
- {
- logger.Warning("Rejected revoked token for {Path}", context.HttpContext.Request.Path);
- context.Fail("Token revoked");
- }
- }
- return Task.CompletedTask;
- }
- };
+    // Check token revocation on message received
+    options.Events = new Microsoft.AspNetCore.Authentication.JwtBearer.JwtBearerEvents
+    {
+        OnMessageReceived = context =>
+        {
+            // allow the token to be read normally
+            return Task.CompletedTask;
+        },
+        OnTokenValidated = context =>
+        {
+            var logger = context.HttpContext.RequestServices.GetService<Serilog.ILogger>() ?? Log.Logger;
+            var blacklist = context.HttpContext.RequestServices.GetService<ITokenBlacklist>();
+            var token = context.SecurityToken as JwtSecurityToken;
+            var raw = context.Request.Headers["Authorization"].FirstOrDefault()?.Split(' ').Last();
+            logger.Information("Token validated for {Path}, token present: {HasToken}", context.HttpContext.Request.Path, !string.IsNullOrEmpty(raw));
+            if (token != null && blacklist != null)
+            {
+                if (blacklist.IsRevoked(raw ?? string.Empty))
+                {
+                    logger.Warning("Rejected revoked token for {Path}", context.HttpContext.Request.Path);
+                    context.Fail("Token revoked");
+                }
+            }
+            return Task.CompletedTask;
+        }
+    };
 });
 
 builder.Services.AddAuthorization(options =>
 {
- options.AddPolicy("AdminOnly", policy =>
- {
- policy.RequireAssertion(context =>
- {
- var claim = context.User.FindFirst("rights")?.Value;
- if (string.IsNullOrEmpty(claim)) return false;
- if (!int.TryParse(claim, out var rights)) return false;
- // Admin flag ==1
- return (rights & (int)UserRights.Admin) == (int)UserRights.Admin;
- });
- });
+    options.AddPolicy("AdminOnly", policy =>
+    {
+        policy.RequireAssertion(context =>
+     {
+        var claim = context.User.FindFirst("rights")?.Value;
+        if (string.IsNullOrEmpty(claim)) return false;
+        if (!int.TryParse(claim, out var rights)) return false;
+         // Admin flag ==1
+        return (rights & (int)UserRights.Admin) == (int)UserRights.Admin;
+    });
+    });
 });
 
 var app = builder.Build();
@@ -178,14 +178,14 @@ addFakeDB(app);
 // Pipeline HTTP
 if (app.Environment.IsDevelopment())
 {
- app.UseSwagger();
- app.UseSwaggerUI(options =>
- {
- // Configure OAuth settings so the Swagger UI modal shows username/password for the password flow
- options.OAuthClientId("swagger-ui");
- options.OAuthAppName("CreaPrint Swagger UI");
- options.OAuthUsePkce();
- });
+    app.UseSwagger();
+    app.UseSwaggerUI(options =>
+    {
+        // Configure OAuth settings so the Swagger UI modal shows username/password for the password flow
+        options.OAuthClientId("swagger-ui");
+        options.OAuthAppName("CreaPrint Swagger UI");
+        options.OAuthUsePkce();
+    });
 }
 
 app.UseHttpsRedirection();
@@ -194,17 +194,17 @@ app.UseCors(); // Ajout du middleware CORS
 // Simple explicit request-logging middleware to guarantee entries for each request
 app.Use(async (context, next) =>
 {
- var sw = Stopwatch.StartNew();
- Log.Logger.Information("Incoming {Method} {Path}", context.Request.Method, context.Request.Path);
- try
- {
- await next();
- }
- finally
- {
- sw.Stop();
- Log.Logger.Information("Finished {Method} {Path} responded {StatusCode} in {Elapsed}ms", context.Request.Method, context.Request.Path, context.Response.StatusCode, sw.Elapsed.TotalMilliseconds);
- }
+    var sw = Stopwatch.StartNew();
+    Log.Logger.Information("Incoming {Method} {Path}", context.Request.Method, context.Request.Path);
+    try
+    {
+        await next();
+    }
+    finally
+    {
+        sw.Stop();
+        Log.Logger.Information("Finished {Method} {Path} responded {StatusCode} in {Elapsed}ms", context.Request.Method, context.Request.Path, context.Response.StatusCode, sw.Elapsed.TotalMilliseconds);
+    }
 });
 
 app.UseAuthentication();
@@ -216,9 +216,10 @@ app.UseAuthorization();
 app.MapControllers();
 
 // Redirige la racine vers Swagger
-app.MapGet("/", context => {
- context.Response.Redirect("/swagger");
- return Task.CompletedTask;
+app.MapGet("/", context =>
+{
+    context.Response.Redirect("/swagger");
+    return Task.CompletedTask;
 });
 
 app.Run();
@@ -226,22 +227,22 @@ app.Run();
 static void addFakeDB(WebApplication app)
 {
 
- // Initialisation de la base InMemory avec des articles de test (dev uniquement)
- if (app.Environment.IsDevelopment())
- {
- using var scope = app.Services.CreateScope();
- var db = scope.ServiceProvider.GetRequiredService<CreaPrintDbContext>();
- var userService = scope.ServiceProvider.GetRequiredService<CreaPrintCore.Interfaces.IUserService>();
- if (!db.Articles.Any())
- {
+    // Initialisation de la base InMemory avec des articles de test (dev uniquement)
+    if (app.Environment.IsDevelopment())
+    {
+        using var scope = app.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<CreaPrintDbContext>();
+        var userService = scope.ServiceProvider.GetRequiredService<CreaPrintCore.Interfaces.IUserService>();
+        if (!db.Articles.Any())
+        {
 
- var testCategory = new Category { Name = "Test" };
- var demoCategory = new Category { Name = "Demo" };
- db.Categories.AddRange(testCategory, demoCategory);
- db.SaveChanges();
+            var testCategory = new Category { Name = "Test" };
+            var demoCategory = new Category { Name = "Demo" };
+            db.Categories.AddRange(testCategory, demoCategory);
+            db.SaveChanges();
 
- db.Articles.AddRange(new[]
- {
+            db.Articles.AddRange(new[]
+            {
  new Article { Title = "Premier article", Content = "Contenu de test", CategoryId = testCategory.Id, Category = testCategory, CreatedOn = DateTime.Now, Price =10.99m },
  new Article { Title = "Second article", Content = "Encore du contenu", CategoryId = demoCategory.Id, Category = demoCategory, CreatedOn = DateTime.Now, Price =15.50m },
  new Article { Title = "3 iem article", Content = "Contenu de test", CategoryId = testCategory.Id, Category = testCategory, CreatedOn = DateTime.Now, Price =8.75m },
@@ -249,14 +250,14 @@ static void addFakeDB(WebApplication app)
  new Article { Title = "5 iem article", Content = "Contenu de test", CategoryId = testCategory.Id, Category = testCategory, CreatedOn = DateTime.Now, Price =9.99m },
  new Article { Title = "6 iem article", Content = "Encore du contenu", CategoryId = demoCategory.Id, Category = demoCategory, CreatedOn = DateTime.Now, Price =20.00m },
  });
- db.SaveChanges();
- }
+            db.SaveChanges();
+        }
 
- // create fake admin user if not exists
- if (!db.Users.Any())
- {
- var admin = new CreaPrintCore.Models.User { Username = "admin", Rights = CreaPrintCore.Models.UserRights.Admin };
- userService.CreateAsync(admin, "admin123").GetAwaiter().GetResult();
- }
- }
+        // create fake admin user if not exists
+        if (!db.Users.Any())
+        {
+            var admin = new CreaPrintCore.Models.User { Username = "admin", Rights = CreaPrintCore.Models.UserRights.Admin };
+            userService.CreateAsync(admin, "admin123").GetAwaiter().GetResult();
+        }
+    }
 }

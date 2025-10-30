@@ -6,12 +6,12 @@ using ApiCategory = CreaPrintApi.Dtos.Category;
 
 namespace CreaPrintApi.Dtos
 {
- public class MappingProfile : Profile
- {
- public MappingProfile()
- {
- CreateMap<CoreCategory, ApiCategory>().ReverseMap();
- CreateMap<CoreArticle, ApiArticle>().ReverseMap();
- }
- }
+    public class MappingProfile : Profile
+    {
+        public MappingProfile()
+        {
+            CreateMap<CoreCategory, ApiCategory>().ReverseMap();
+            CreateMap<CoreArticle, ApiArticle>().ReverseMap();
+        }
+    }
 }
