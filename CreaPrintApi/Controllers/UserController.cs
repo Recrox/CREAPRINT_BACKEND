@@ -6,6 +6,7 @@ using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
+using CreaPrintApi.Services;
 
 namespace CreaPrintApi.Controllers;
 
@@ -15,11 +16,13 @@ public class UserController : ControllerBase
 {
  private readonly IUserService _service;
  private readonly IConfiguration _configuration;
+ private readonly ITokenBlacklist _blacklist;
 
- public UserController(IUserService service, IConfiguration configuration)
+ public UserController(IUserService service, IConfiguration configuration, ITokenBlacklist blacklist)
  {
  _service = service;
  _configuration = configuration;
+ _blacklist = blacklist;
  }
 
  [HttpPost("authenticate")]
@@ -60,6 +63,24 @@ public class UserController : ControllerBase
  {
  var users = await _service.GetAllAsync();
  return Ok(users.Select(u => new { u.Id, u.Username }));
+ }
+
+ // Logout endpoint: revokes the current bearer token
+ [HttpPost("logout")]
+ [Authorize]
+ public IActionResult Logout()
+ {
+ // Expecting Authorization: Bearer <token>
+ var auth = Request.Headers["Authorization"].FirstOrDefault();
+ if (string.IsNullOrEmpty(auth)) return BadRequest(new { error = "Authorization header missing" });
+
+ var parts = auth.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+ if (parts.Length !=2 || !parts[0].Equals("Bearer", StringComparison.OrdinalIgnoreCase))
+ return BadRequest(new { error = "Invalid Authorization header" });
+
+ var token = parts[1];
+ _blacklist.RevokeToken(token);
+ return NoContent();
  }
 
  private string GenerateToken(User user)

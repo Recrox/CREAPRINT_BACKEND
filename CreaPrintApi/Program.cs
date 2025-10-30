@@ -10,6 +10,8 @@ using CreaPrintApi.Validators;
 using Microsoft.OpenApi.Models;
 using System.Text;
 using Microsoft.IdentityModel.Tokens;
+using CreaPrintApi.Services;
+using System.IdentityModel.Tokens.Jwt;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -18,6 +20,9 @@ builder.Services.AddGlobalConfiguration(builder.Configuration);
 // Register database repositories before core services so repository implementations are available when core services are validated
 builder.Services.AddDatabaseRepositories();
 builder.Services.AddCoreServices();
+
+// Register token blacklist (in-memory)
+builder.Services.AddSingleton<ITokenBlacklist, InMemoryTokenBlacklist>();
 
 // Lecture des AllowedHosts pour CORS
 IEnumerable<string> allowedHosts = builder.Configuration["AllowedHosts"]?.Split(';', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries) ?? [];
@@ -102,6 +107,30 @@ builder.Services.AddAuthentication(options =>
  ValidateIssuerSigningKey = true,
  IssuerSigningKey = new SymmetricSecurityKey(keyBytes),
  ValidateLifetime = true
+ };
+
+ // Check token revocation on message received
+ options.Events = new Microsoft.AspNetCore.Authentication.JwtBearer.JwtBearerEvents
+ {
+ OnMessageReceived = context =>
+ {
+ // allow the token to be read normally
+ return Task.CompletedTask;
+ },
+ OnTokenValidated = context =>
+ {
+ var blacklist = context.HttpContext.RequestServices.GetService<ITokenBlacklist>();
+ var token = context.SecurityToken as JwtSecurityToken;
+ if (token != null && blacklist != null)
+ {
+ var raw = context.Request.Headers["Authorization"].FirstOrDefault()?.Split(' ').Last();
+ if (blacklist.IsRevoked(raw))
+ {
+ context.Fail("Token revoked");
+ }
+ }
+ return Task.CompletedTask;
+ }
  };
 });
 
