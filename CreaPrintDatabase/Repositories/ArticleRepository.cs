@@ -30,11 +30,11 @@ public class ArticleRepository : GenericRepository<Article>, IArticleRepository
             .FirstOrDefaultAsync(a => a.Id == id);
     }
 
-    public async Task<int> GetCountAsync(Func<Article, bool>? filter = null)
-    {
-        if (filter == null)
-            return await _dbContext.Articles.CountAsync();
-        else
-            return await Task.FromResult(_dbContext.Articles.Count(filter));
-    }
+    //public async Task<int> GetCountAsync(Func<Article, bool>? filter = null)
+    //{
+    //    if (filter == null)
+    //        return await _dbContext.Articles.CountAsync();
+    //    else
+    //        return await Task.FromResult(_dbContext.Articles.Count(filter));
+    //}
 }
