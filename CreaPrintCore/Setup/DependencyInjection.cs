@@ -9,6 +9,7 @@ namespace CreaPrintCore.Setup
  public static IServiceCollection AddCoreServices(this IServiceCollection services)
  {
  services.AddScoped<IArticleService, ArticleService>();
+ services.AddScoped<IUserService, UserService>();
  // Ajoute ici d'autres services du core si besoin
  return services;
  }
