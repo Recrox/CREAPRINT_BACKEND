@@ -113,52 +113,57 @@ builder.Services.AddFluentValidationAutoValidation();
 builder.Services.AddValidatorsFromAssemblyContaining<ArticleValidator>();
 
 // JWT configuration
-var jwtKey = builder.Configuration["Jwt:Key"] ?? "dev_secret_change_me_long_enough";
+var jwtKey = builder.Configuration.GetValue<string>("Jwt:Key");
+if (string.IsNullOrEmpty(jwtKey))
+{
+ Log.Logger.Warning("Configuration key 'Jwt:Key' is missing. Falling back to default development key. Set Jwt:Key in appsettings for production.");
+ jwtKey = "dev_secret_change_me_long_enough";
+}
 var keyBytes = Encoding.UTF8.GetBytes(jwtKey);
 
 builder.Services.AddAuthentication(options =>
 {
-    options.DefaultAuthenticateScheme = Microsoft.AspNetCore.Authentication.JwtBearer.JwtBearerDefaults.AuthenticationScheme;
-    options.DefaultChallengeScheme = Microsoft.AspNetCore.Authentication.JwtBearer.JwtBearerDefaults.AuthenticationScheme;
+ options.DefaultAuthenticateScheme = Microsoft.AspNetCore.Authentication.JwtBearer.JwtBearerDefaults.AuthenticationScheme;
+ options.DefaultChallengeScheme = Microsoft.AspNetCore.Authentication.JwtBearer.JwtBearerDefaults.AuthenticationScheme;
 })
 .AddJwtBearer(options =>
 {
-    options.RequireHttpsMetadata = false;
-    options.TokenValidationParameters = new Microsoft.IdentityModel.Tokens.TokenValidationParameters
-    {
-        ValidateIssuer = false,
-        ValidateAudience = false,
-        ValidateIssuerSigningKey = true,
-        IssuerSigningKey = new SymmetricSecurityKey(keyBytes),
-        ValidateLifetime = true
-    };
+ options.RequireHttpsMetadata = false;
+ options.TokenValidationParameters = new Microsoft.IdentityModel.Tokens.TokenValidationParameters
+ {
+ ValidateIssuer = false,
+ ValidateAudience = false,
+ ValidateIssuerSigningKey = true,
+ IssuerSigningKey = new SymmetricSecurityKey(keyBytes),
+ ValidateLifetime = true
+ };
 
-    // Check token revocation on message received
-    options.Events = new Microsoft.AspNetCore.Authentication.JwtBearer.JwtBearerEvents
-    {
-        OnMessageReceived = context =>
-        {
-            // allow the token to be read normally
-            return Task.CompletedTask;
-        },
-        OnTokenValidated = context =>
-        {
-            var logger = context.HttpContext.RequestServices.GetService<Serilog.ILogger>() ?? Log.Logger;
-            var blacklist = context.HttpContext.RequestServices.GetService<ITokenBlacklist>();
-            var token = context.SecurityToken as JwtSecurityToken;
-            var raw = context.Request.Headers["Authorization"].FirstOrDefault()?.Split(' ').Last();
-            logger.Information("Token validated for {Path}, token present: {HasToken}", context.HttpContext.Request.Path, !string.IsNullOrEmpty(raw));
-            if (token != null && blacklist != null)
-            {
-                if (blacklist.IsRevoked(raw ?? string.Empty))
-                {
-                    logger.Warning("Rejected revoked token for {Path}", context.HttpContext.Request.Path);
-                    context.Fail("Token revoked");
-                }
-            }
-            return Task.CompletedTask;
-        }
-    };
+ // Check token revocation on message received
+ options.Events = new Microsoft.AspNetCore.Authentication.JwtBearer.JwtBearerEvents
+ {
+ OnMessageReceived = context =>
+ {
+ // allow the token to be read normally
+ return Task.CompletedTask;
+ },
+ OnTokenValidated = context =>
+ {
+ var logger = context.HttpContext.RequestServices.GetService<Serilog.ILogger>() ?? Log.Logger;
+ var blacklist = context.HttpContext.RequestServices.GetService<ITokenBlacklist>();
+ var token = context.SecurityToken as JwtSecurityToken;
+ var raw = context.Request.Headers["Authorization"].FirstOrDefault()?.Split(' ').Last();
+ logger.Information("Token validated for {Path}, token present: {HasToken}", context.HttpContext.Request.Path, !string.IsNullOrEmpty(raw));
+ if (token != null && blacklist != null)
+ {
+ if (blacklist.IsRevoked(raw ?? string.Empty))
+ {
+ logger.Warning("Rejected revoked token for {Path}", context.HttpContext.Request.Path);
+ context.Fail("Token revoked");
+ }
+ }
+ return Task.CompletedTask;
+ }
+ };
 });
 
 builder.Services.AddAuthorization(options =>
@@ -191,6 +196,8 @@ if (app.Environment.IsDevelopment())
         options.OAuthClientId("swagger-ui");
         options.OAuthAppName("CreaPrint Swagger UI");
         options.OAuthUsePkce();
+        // Collapse operations and tags by default
+        options.DocExpansion(Swashbuckle.AspNetCore.SwaggerUI.DocExpansion.None);
     });
 }
 
