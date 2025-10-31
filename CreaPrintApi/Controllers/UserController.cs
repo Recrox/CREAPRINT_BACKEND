@@ -71,7 +71,7 @@ public class UserController : BaseController
         var user = await _service.AuthenticateAsync(username, password);
         if (user == null) return Unauthorized();
 
-        if (!user.IsActive) return Unauthorized(new { error = "Account not activated" });
+        //if (!user.IsActive) return Unauthorized(new { error = "Account not activated" });
 
         var tokenStr = GenerateToken(user);
         var expiresIn = 60 * 60 * 2; //2 hours
