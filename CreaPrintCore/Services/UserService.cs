@@ -37,6 +37,19 @@ namespace CreaPrintCore.Services
             return await _repository.GetAllAsync();
         }
 
+        public async Task<bool> ChangePasswordAsync(int userId, string currentPassword, string newPassword)
+        {
+            var user = await _repository.GetByIdAsync(userId);
+            if (user == null) return false;
+
+            var currentHash = ComputeHash(currentPassword);
+            if (currentHash != user.PasswordHash) return false;
+
+            user.PasswordHash = ComputeHash(newPassword);
+            await _repository.UpdateAsync(user);
+            return true;
+        }
+
         private static string ComputeHash(string input)
         {
             using var sha = SHA256.Create();

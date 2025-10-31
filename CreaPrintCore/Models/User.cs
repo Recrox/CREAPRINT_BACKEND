@@ -6,5 +6,7 @@ namespace CreaPrintCore.Models
         // PasswordHash will be set by the service when creating the user
         public string PasswordHash { get; set; } = string.Empty;
         public UserRights Rights { get; set; } = UserRights.None;
+        // Email address for the user
+        public required string Email { get; set; }
     }
 }

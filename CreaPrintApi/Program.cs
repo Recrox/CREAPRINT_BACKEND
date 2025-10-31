@@ -18,6 +18,7 @@ using System.Text.Json.Serialization;
 using Newtonsoft.Json.Converters;
 using Microsoft.OpenApi.Any;
 using Microsoft.OpenApi.Models;
+using CreaPrintCore.Interfaces;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -50,10 +51,13 @@ builder.Services.AddCoreServices();
 // Register token blacklist (in-memory)
 builder.Services.AddSingleton<ITokenBlacklist, InMemoryTokenBlacklist>();
 
+// Register email service
+builder.Services.AddSingleton<IEmailService, EmailService>();
+
 // Register basket repository and service are handled by AddDatabaseRepositories/AddCoreServices changes
 
 // Lecture des AllowedHosts pour CORS
-IEnumerable<string> allowedHosts = builder.Configuration["AllowedHosts"]?.Split(';', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries) ?? [];
+IEnumerable<string> allowedHosts = builder.Configuration["AllowedHosts"]?.Split(';', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries) ?? Array.Empty<string>();
 
 builder.Services.AddCors(options =>
 {

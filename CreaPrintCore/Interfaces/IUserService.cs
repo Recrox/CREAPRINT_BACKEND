@@ -9,5 +9,6 @@ namespace CreaPrintCore.Interfaces
         Task<User?> AuthenticateAsync(string username, string password);
         Task<User> CreateAsync(User user, string password);
         Task<IEnumerable<User>> GetAllAsync();
+        Task<bool> ChangePasswordAsync(int userId, string currentPassword, string newPassword);
     }
 }

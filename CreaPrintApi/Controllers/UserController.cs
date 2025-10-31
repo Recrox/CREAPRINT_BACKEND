@@ -21,14 +21,16 @@ public class UserController : BaseController
     private readonly IUserRepository _userRepo;
     private readonly IConfiguration _configuration;
     private readonly ITokenBlacklist _blacklist;
+    private readonly IEmailService _emailService;
 
-    public UserController(CurrentUser currentUser, IUserService service, IUserRepository userRepo, IConfiguration configuration, ITokenBlacklist blacklist)
+    public UserController(CurrentUser currentUser, IUserService service, IUserRepository userRepo, IConfiguration configuration, ITokenBlacklist blacklist, IEmailService emailService)
         : base(currentUser)
     {
         _service = service;
         _userRepo = userRepo;
         _configuration = configuration;
         _blacklist = blacklist;
+        _emailService = emailService;
     }
 
     [HttpPost("authenticate")]
@@ -71,8 +73,12 @@ public class UserController : BaseController
     [AllowAnonymous]
     public async Task<ActionResult<User>> Create([FromBody] CreateUserRequest request)
     {
-        var user = new User { Username = request.Username };
+        var user = new User { Username = request.Username, Email = request.Email };
         var created = await _service.CreateAsync(user, request.Password);
+
+        // Send welcome email
+        await _emailService.SendEmailAsync(created.Email, "Welcome to CreaPrint", $"Hello {created.Username}, your account has been created.");
+
         return CreatedAtAction(null, new { id = created.Id }, new { created.Id, created.Username });
     }
 
@@ -149,7 +155,25 @@ public class UserController : BaseController
 
         return Ok(user);
     }
+
+    // POST /api/user/change-password - change current user's password
+    [HttpPost("change-password")]
+    [Authorize]
+    public async Task<IActionResult> ChangePassword([FromBody] ChangePasswordRequest request)
+    {
+        var user = CurrentUser;
+        if (user == null) return Unauthorized();
+
+        var success = await _service.ChangePasswordAsync(user.Id, request.CurrentPassword, request.NewPassword);
+        if (!success) return BadRequest(new { error = "Current password invalid" });
+
+        // Notify user by email
+        await _emailService.SendEmailAsync(user.Email, "Password changed", "Your password has been changed.");
+
+        return NoContent();
+    }
 }
 
 public record LoginRequest(string Username, string Password);
-public record CreateUserRequest(string Username, string Password);
+public record CreateUserRequest(string Username, string Password, string Email);
+public record ChangePasswordRequest(string CurrentPassword, string NewPassword);

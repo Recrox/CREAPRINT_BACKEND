@@ -10,5 +10,6 @@ namespace CreaPrintCore.Interfaces
         Task<User?> GetByIdAsync(int id);
         Task<User> CreateAsync(User user);
         Task<IEnumerable<User>> GetAllAsync();
+        Task UpdateAsync(User user);
     }
 }
