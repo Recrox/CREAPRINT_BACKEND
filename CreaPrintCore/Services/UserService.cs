@@ -29,6 +29,11 @@ namespace CreaPrintCore.Services
         public async Task<User> CreateAsync(User user, string password)
         {
             user.PasswordHash = ComputeHash(password);
+            // Ensure new users are inactive until they activate via email
+            user.IsActive = false;
+            // create activation token valid for7 days
+            user.ActivationToken = GenerateToken();
+            user.ActivationTokenExpires = DateTime.UtcNow.AddDays(7);
             return await _repository.CreateAsync(user);
         }
 
@@ -55,6 +60,13 @@ namespace CreaPrintCore.Services
             using var sha = SHA256.Create();
             var bytes = sha.ComputeHash(Encoding.UTF8.GetBytes(input));
             return Convert.ToBase64String(bytes);
+        }
+
+        private static string GenerateToken()
+        {
+            // create a32-bytes random token encoded as URL-safe base64
+            var bytes = RandomNumberGenerator.GetBytes(32);
+            return Convert.ToBase64String(bytes).Replace('+', '-').Replace('/', '_').TrimEnd('=');
         }
     }
 }

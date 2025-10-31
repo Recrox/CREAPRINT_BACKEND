@@ -43,6 +43,13 @@ public class UserController : BaseController
             return Unauthorized();
         }
 
+        //// deny login if user not active
+        //if (!user.IsActive)
+        //{
+        //    Log.Logger.Information("Attempt to login with inactive account {Username}", request.Username);
+        //    return Unauthorized(new { error = "Account not activated" });
+        //}
+
         var tokenStr = GenerateToken(user);
         Log.Logger.Information("User {Username} authenticated", request.Username);
         return Ok(new { token = tokenStr });
@@ -64,6 +71,8 @@ public class UserController : BaseController
         var user = await _service.AuthenticateAsync(username, password);
         if (user == null) return Unauthorized();
 
+        if (!user.IsActive) return Unauthorized(new { error = "Account not activated" });
+
         var tokenStr = GenerateToken(user);
         var expiresIn = 60 * 60 * 2; //2 hours
         return Ok(new { access_token = tokenStr, token_type = "bearer", expires_in = expiresIn });
@@ -76,10 +85,33 @@ public class UserController : BaseController
         var user = new User { Username = request.Username, Email = request.Email, Rights = (UserRights)request.Rights };
         var created = await _service.CreateAsync(user, request.Password);
 
-        // Send welcome email
-        await _emailService.SendEmailAsync(created.Email, "Welcome to CreaPrint", $"Hello {created.Username}, your account has been created.");
+        // Build activation link
+        var frontendBase = _configuration["FrontendBaseUrl"] ?? _configuration["App:BaseUrl"] ?? "";
+        var activationPath = $"/api/user/activate?token={created.ActivationToken}";
+        var activationLink = string.IsNullOrEmpty(frontendBase) ? activationPath : frontendBase.TrimEnd('/') + activationPath;
+
+        // Send welcome email with activation link
+        var emailBody = $"Hello {created.Username}, your account has been created. Please activate it by visiting: {activationLink}";
+        await _emailService.SendEmailAsync(created.Email, "Welcome to CreaPrint - Activate your account", emailBody);
 
         return CreatedAtAction(null, new { id = created.Id }, new { created.Id, created.Username });
+    }
+
+    [HttpGet("activate")]
+    [AllowAnonymous]
+    public async Task<IActionResult> Activate([FromQuery] string token)
+    {
+        if (string.IsNullOrEmpty(token)) return BadRequest(new { error = "Token missing" });
+
+        var user = await _userRepo.GetByActivationTokenAsync(token);
+        if (user == null) return NotFound(new { error = "Invalid or expired token" });
+
+        user.IsActive = true;
+        user.ActivationToken = null;
+        user.ActivationTokenExpires = null;
+        await _userRepo.UpdateAsync(user);
+
+        return Ok(new { message = "Account activated" });
     }
 
     [HttpGet]

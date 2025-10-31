@@ -37,4 +37,9 @@ public class UserRepository : BaseRepository<User>, IUserRepository
     {
         await base.UpdateAsync(user);
     }
+
+    public async Task<User?> GetByActivationTokenAsync(string token)
+    {
+        return await _dbContext.Users.FirstOrDefaultAsync(u => u.ActivationToken == token && (u.ActivationTokenExpires == null || u.ActivationTokenExpires > DateTime.UtcNow));
+    }
 }
