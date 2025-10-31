@@ -73,7 +73,7 @@ public class UserController : BaseController
     [AllowAnonymous]
     public async Task<ActionResult<User>> Create([FromBody] CreateUserRequest request)
     {
-        var user = new User { Username = request.Username, Email = request.Email };
+        var user = new User { Username = request.Username, Email = request.Email, Rights = (UserRights)request.Rights };
         var created = await _service.CreateAsync(user, request.Password);
 
         // Send welcome email
@@ -175,5 +175,5 @@ public class UserController : BaseController
 }
 
 public record LoginRequest(string Username, string Password);
-public record CreateUserRequest(string Username, string Password, string Email);
+public record CreateUserRequest(string Username, string Password, string Email, int Rights =0);
 public record ChangePasswordRequest(string CurrentPassword, string NewPassword);

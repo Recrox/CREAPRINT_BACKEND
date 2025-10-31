@@ -1,7 +1,5 @@
-using Microsoft.EntityFrameworkCore;
 using CreaPrintDatabase;
 using CreaPrintCore.Models;
-using Microsoft.Extensions.DependencyInjection;
 
 namespace CreaPrintApi.Setup;
 
@@ -60,7 +58,7 @@ public static class DevDatabaseSeeder
  // create fake admin user if not exists
  if (!db.Users.Any())
  {
- var admin = new User { Username = "admin", Rights = UserRights.Admin, Email = "admin@local" };
+ var admin = new User { Username = "admin", Rights = UserRights.Admin | UserRights.Vendeur | UserRights.Artisan | UserRights.Commercial, Email = "admin@local" };
  userService.CreateAsync(admin, "admin123").GetAwaiter().GetResult();
  }
  }
