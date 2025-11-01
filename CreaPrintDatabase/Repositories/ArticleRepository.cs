@@ -30,11 +30,17 @@ public class ArticleRepository : BaseRepository<Article>, IArticleRepository
             .FirstOrDefaultAsync(a => a.Id == id);
     }
 
-    // helper: search by title using base FindAsync
+    // helper: search by title and include related data using string.Contains (case-insensitive)
     public async Task<IEnumerable<Article>> GetByTitleAsync(string title)
     {
         if (string.IsNullOrWhiteSpace(title)) return Enumerable.Empty<Article>();
         var normalized = title.Trim();
-        return await FindAsync(a => EF.Functions.Like(a.Title, $"%{normalized}%"));
+        var normalizedLower = normalized.ToLowerInvariant();
+        return await _dbContext.Articles
+            .Include(a => a.Category)
+            .Include(a => a.Images)
+            .Include(a => a.Translations)
+            .Where(a => a.Title.ToLower().Contains(normalizedLower))
+            .ToListAsync();
     }
 }
