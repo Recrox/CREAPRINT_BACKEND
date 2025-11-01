@@ -1,4 +1,6 @@
+using System;
 using System.Threading.Tasks;
+using System.Collections.Generic;
 using CreaPrintCore.Interfaces;
 using CreaPrintCore.Models;
 using System.Linq;
@@ -10,10 +12,12 @@ namespace CreaPrintCore.Services
  public class BasketService : IBasketService
  {
  private readonly IBasketRepository _repository;
+ private readonly IArticleRepository _articleRepository;
 
- public BasketService(IBasketRepository repository)
+ public BasketService(IBasketRepository repository, IArticleRepository articleRepository)
  {
  _repository = repository;
+ _articleRepository = articleRepository;
  }
 
  public async Task<Basket?> GetByUserIdAsync(int userId)
@@ -66,6 +70,35 @@ namespace CreaPrintCore.Services
  await _repository.AddItemAsync(item);
  }
 
+ // new: add item for a user's basket with full flow (create basket if needed)
+ public async Task AddItemToUserBasketAsync(int userId, int articleId, int quantity)
+ {
+ if (quantity <=0) throw new ArgumentException("Quantity must be greater than zero", nameof(quantity));
+
+ var basket = await _repository.GetByUserIdAsync(userId);
+ if (basket == null)
+ {
+ basket = new Basket { UserId = userId };
+ basket = await _repository.CreateAsync(basket);
+ }
+
+ // optional: validate article exists and stock
+ var article = await _articleRepository.GetByIdAsync(articleId);
+ if (article == null) throw new InvalidOperationException("Article not found");
+
+ var existing = await _repository.GetItemByBasketAndArticleAsync(basket.Id, articleId);
+ if (existing != null)
+ {
+ existing.Quantity += quantity;
+ await _repository.UpdateItemAsync(existing);
+ }
+ else
+ {
+ var item = new BasketItem { BasketId = basket.Id, ArticleId = articleId, Quantity = quantity };
+ await _repository.AddItemAsync(item);
+ }
+ }
+
  public async Task RemoveItemAsync(int itemId)
  {
  // Simply remove the item from the basket.
@@ -77,7 +110,7 @@ namespace CreaPrintCore.Services
  var basket = await _repository.GetByUserIdAsync(userId);
  if (basket == null) return 0m;
  // Sum quantity * price, handle missing Article or Price
- return basket.Items?.Sum(i => (i.Article?.Price ?? 0m) * i.Quantity) ?? 0m;
+ return basket.Items?.Sum(i => (i.Article?.Price ??0m) * i.Quantity) ??0m;
  }
  }
 }

@@ -11,6 +11,7 @@ namespace CreaPrintDatabase.Setup
             services.AddScoped<IArticleRepository, ArticleRepository>();
             services.AddScoped<IUserRepository, UserRepository>();
             services.AddScoped<IBasketRepository, BasketRepository>();
+            services.AddScoped<IOrderRepository, OrderRepository>();
             // Ajoute ici d'autres repositories si besoin
             return services;
         }

@@ -11,6 +11,7 @@ namespace CreaPrintCore.Interfaces
  Task<BasketDto?> GetDtoByUserIdAsync(int userId);
  Task<Basket> CreateAsync(Basket basket);
  Task AddItemAsync(BasketItem item);
+ Task AddItemToUserBasketAsync(int userId, int articleId, int quantity);
  Task RemoveItemAsync(int itemId);
  Task<decimal> GetTotalByUserIdAsync(int userId);
  }

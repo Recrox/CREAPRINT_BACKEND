@@ -2,6 +2,7 @@ using CreaPrintCore.Models;
 using CreaPrintCore.Models.Articles;
 using CreaPrintCore.Models.Baskets;
 using CreaPrintCore.Models.Users;
+using CreaPrintCore.Models.Orders;
 using Microsoft.EntityFrameworkCore;
 
 namespace CreaPrintDatabase
@@ -17,6 +18,8 @@ namespace CreaPrintDatabase
         public DbSet<BasketItem> BasketItems { get; set; }
         public DbSet<ArticleImage> ArticleImages { get; set; }
         public DbSet<ArticleTranslation> ArticleTranslations { get; set; }
+        public DbSet<Order> Orders { get; set; }
+        public DbSet<OrderItem> OrderItems { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -48,6 +51,12 @@ namespace CreaPrintDatabase
             .HasOne(t => t.Article)
             .WithMany(a => a.Translations)
             .HasForeignKey(t => t.ArticleId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<Order>()
+            .HasMany(o => o.Items)
+            .WithOne(i => i.Order)
+            .HasForeignKey(i => i.OrderId)
             .OnDelete(DeleteBehavior.Cascade);
         }
     }

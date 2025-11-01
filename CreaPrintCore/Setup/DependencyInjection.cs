@@ -2,18 +2,18 @@ using Microsoft.Extensions.DependencyInjection;
 using CreaPrintCore.Interfaces;
 using CreaPrintCore.Services;
 
-namespace CreaPrintCore.Setup
+namespace CreaPrintCore.Setup;
+
+public static class DependencyInjection
 {
-    public static class DependencyInjection
+    public static IServiceCollection AddCoreServices(this IServiceCollection services)
     {
-        public static IServiceCollection AddCoreServices(this IServiceCollection services)
-        {
-            services.AddScoped<IArticleService, ArticleService>();
-            services.AddScoped<IUserService, UserService>();
-            services.AddScoped<CurrentUser>();
-            services.AddScoped<IBasketService, BasketService>();
-            // Ajoute ici d'autres services du core si besoin
-            return services;
-        }
+        services.AddScoped<IArticleService, ArticleService>();
+        services.AddScoped<IUserService, UserService>();
+        services.AddScoped<CurrentUser>();
+        services.AddScoped<IBasketService, BasketService>();
+        services.AddScoped<IOrderService, OrderService>();
+        // Ajoute ici d'autres services du core si besoin
+        return services;
     }
 }

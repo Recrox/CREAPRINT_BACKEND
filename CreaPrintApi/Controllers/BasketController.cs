@@ -1,6 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
 using CreaPrintCore.Interfaces;
-using CreaPrintCore.Services;
 using CreaPrintCore.Models.Baskets;
 using System.Linq;
 using CreaPrintCore.Dtos;
@@ -55,16 +54,17 @@ public class BasketController : BaseController
  if (user == null) return Unauthorized();
  var userId = user.Id;
 
- var basket = await _basketService.GetByUserIdAsync(userId);
- if (basket == null)
- {
- basket = new Basket { UserId = userId };
- basket = await _basketService.CreateAsync(basket);
- }
+ if (request.Quantity <=0) return BadRequest(new { error = "Quantity must be greater than zero" });
 
- var item = new CreaPrintCore.Models.Baskets.BasketItem { BasketId = basket.Id, ArticleId = request.ArticleId, Quantity = request.Quantity };
- await _basketService.AddItemAsync(item);
+ try
+ {
+ await _basketService.AddItemToUserBasketAsync(userId, request.ArticleId, request.Quantity);
  return CreatedAtAction(nameof(GetMyBasket), null);
+ }
+ catch (Exception ex)
+ {
+ return BadRequest(new { error = ex.Message });
+ }
  }
 
  // Remove item
