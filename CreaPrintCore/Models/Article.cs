@@ -16,4 +16,7 @@ public class Article : AuditableEntity
 
     // Available stock quantity for the article
     public int Stock { get; set; } = 0;
+
+    // Images for the article
+    public ICollection<ArticleImage>? Images { get; set; }
 }

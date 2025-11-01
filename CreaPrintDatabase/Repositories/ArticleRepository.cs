@@ -15,18 +15,18 @@ public class ArticleRepository : BaseRepository<Article>, IArticleRepository
 
     public override async Task<IEnumerable<Article>> GetAllAsync()
     {
-        return await _dbContext.Articles.Include(a => a.Category).ToListAsync();
+        return await _dbContext.Articles.Include(a => a.Category).Include(a => a.Images).ToListAsync();
     }
 
     public override async Task<IEnumerable<Article>> GetPagedAsync(int page, int pageSize)
     {
-        return await _dbContext.Articles.Include(a => a.Category)
+        return await _dbContext.Articles.Include(a => a.Category).Include(a => a.Images)
             .Skip(page * pageSize).Take(pageSize).ToListAsync();
     }
 
     public override async Task<Article?> GetByIdAsync(int id)
     {
-        return await _dbContext.Articles.Include(a => a.Category)
+        return await _dbContext.Articles.Include(a => a.Category).Include(a => a.Images)
             .FirstOrDefaultAsync(a => a.Id == id);
     }
 

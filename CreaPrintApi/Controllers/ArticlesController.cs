@@ -18,7 +18,7 @@ public class ArticlesController : BaseController
     }
 
     [HttpGet]
-    [Authorize]
+    //[Authorize]
     public async Task<ActionResult<IEnumerable<Article>>> GetAll()
     {
         var articles = await _service.GetAllAsync();

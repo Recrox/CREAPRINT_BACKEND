@@ -1,5 +1,7 @@
 using CreaPrintDatabase;
 using CreaPrintCore.Models;
+using System.Collections.Generic;
+using System;
 
 namespace CreaPrintApi.Setup;
 
@@ -19,7 +21,7 @@ public static class DevDatabaseSeeder
  db.Categories.AddRange(testCategory, demoCategory);
  db.SaveChanges();
 
- db.Articles.AddRange(new[]
+ var articles = new[]
  {
  new Article { Title = "Premier article", Content = "Contenu de test", CategoryId = testCategory.Id, Category = testCategory, CreatedOn = DateTime.Now, Price =10.99m, Stock =20 },
  new Article { Title = "Second article", Content = "Encore du contenu", CategoryId = demoCategory.Id, Category = demoCategory, CreatedOn = DateTime.Now, Price =15.50m, Stock =15 },
@@ -51,7 +53,44 @@ public static class DevDatabaseSeeder
  new Article { Title = "4 iem article", Content = "Encore du contenu", CategoryId = demoCategory.Id, Category = demoCategory, CreatedOn = DateTime.Now, Price =12.00m, Stock =5 },
  new Article { Title = "5 iem article", Content = "Contenu de test", CategoryId = testCategory.Id, Category = testCategory, CreatedOn = DateTime.Now, Price =9.99m, Stock =8 },
  new Article { Title = "6 iem article", Content = "Encore du contenu", CategoryId = demoCategory.Id, Category = demoCategory, CreatedOn = DateTime.Now, Price =20.00m, Stock =9 },
- });
+ };
+
+ db.Articles.AddRange(articles);
+ db.SaveChanges();
+
+ // create simple images for each article
+ var images = new List<ArticleImage>();
+ var imageUrls = new[]
+ {
+ "https://picsum.photos/seed/pic1/600/400",
+ "https://picsum.photos/seed/pic2/600/400",
+ "https://picsum.photos/seed/pic3/600/400",
+ "https://picsum.photos/seed/pic4/600/400",
+ "https://picsum.photos/seed/pic5/600/400",
+ "https://picsum.photos/seed/pic6/600/400",
+ "https://picsum.photos/seed/pic7/600/400",
+ "https://picsum.photos/seed/pic8/600/400",
+ "https://picsum.photos/seed/pic9/600/400",
+ "https://picsum.photos/seed/pic10/600/400",
+ "https://picsum.photos/seed/pic11/600/400",
+ "https://picsum.photos/seed/pic12/600/400",
+ "https://picsum.photos/seed/pic13/600/400",
+ "https://picsum.photos/seed/pic14/600/400",
+ "https://picsum.photos/seed/pic15/600/400",
+ "https://picsum.photos/seed/pic16/600/400",
+ "https://picsum.photos/seed/pic17/600/400",
+ "https://picsum.photos/seed/pic18/600/400",
+ "https://picsum.photos/seed/pic19/600/400",
+ "https://picsum.photos/seed/pic20/600/400",
+ };
+
+ for (int i =0; i < articles.Length; i++)
+ {
+ var a = articles[i];
+ images.Add(new ArticleImage { ArticleId = a.Id, Url = $"/images/article_{i+1}.jpg", IsPrimary = true });
+ images.Add(new ArticleImage { ArticleId = a.Id, Url = imageUrls[i % imageUrls.Length], IsPrimary = true });
+ }
+ db.ArticleImages.AddRange(images);
  db.SaveChanges();
  }
 
