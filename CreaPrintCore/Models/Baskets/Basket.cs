@@ -1,6 +1,8 @@
+using CreaPrintCore.Models.Base;
+using CreaPrintCore.Models.Users;
 using System.Text.Json.Serialization;
 
-namespace CreaPrintCore.Models;
+namespace CreaPrintCore.Models.Baskets;
 
 public class Basket : AuditableEntity
 {

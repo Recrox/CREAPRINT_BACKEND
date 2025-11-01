@@ -1,6 +1,6 @@
 using System;
 
-namespace CreaPrintCore.Models
+namespace CreaPrintCore.Models.Users
 {
     [Flags]
     public enum UserRights

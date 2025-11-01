@@ -1,6 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using CreaPrintCore.Services;
-using CreaPrintCore.Models;
+using CreaPrintCore.Models.Users;
 
 namespace CreaPrintApi.Controllers
 {

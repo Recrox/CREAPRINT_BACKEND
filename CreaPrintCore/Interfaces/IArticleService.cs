@@ -1,3 +1,4 @@
+using CreaPrintCore.Models.Articles;
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
@@ -6,13 +7,13 @@ namespace CreaPrintCore.Interfaces
 {
     public interface IArticleService
     {
-        Task<IEnumerable<Models.Article>> GetAllAsync();
-        Task<Models.Article?> GetByIdAsync(int id);
-        Task<Models.Article> CreateAsync(Models.Article article);
-        Task<IEnumerable<Models.Article>> GetPagedAsync(int page, int pageSize);
-        Task<int> GetCountAsync(Func<Models.Article, bool>? filter = null);
-        Task<Models.Article?> UpdateAsync(int id, Models.Article article);
+        Task<IEnumerable<Article>> GetAllAsync();
+        Task<Article?> GetByIdAsync(int id);
+        Task<Article> CreateAsync(Article article);
+        Task<IEnumerable<Article>> GetPagedAsync(int page, int pageSize);
+        Task<int> GetCountAsync(Func<Article, bool>? filter = null);
+        Task<Article?> UpdateAsync(int id, Article article);
         Task<bool> DeleteAsync(int id);
-        Task<IEnumerable<Models.Article>> GetByTitleAsync(string title);
+        Task<IEnumerable<Article>> GetByTitleAsync(string title);
     }
 }

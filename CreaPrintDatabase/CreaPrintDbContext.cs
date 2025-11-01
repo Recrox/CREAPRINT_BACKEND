@@ -1,4 +1,7 @@
 using CreaPrintCore.Models;
+using CreaPrintCore.Models.Articles;
+using CreaPrintCore.Models.Baskets;
+using CreaPrintCore.Models.Users;
 using Microsoft.EntityFrameworkCore;
 
 namespace CreaPrintDatabase

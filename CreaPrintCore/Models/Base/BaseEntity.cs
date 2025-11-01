@@ -1,4 +1,4 @@
-namespace CreaPrintCore.Models;
+namespace CreaPrintCore.Models.Base;
 
 public abstract class BaseEntity
 {

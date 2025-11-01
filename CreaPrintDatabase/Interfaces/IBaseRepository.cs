@@ -1,8 +1,8 @@
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
-using CreaPrintCore.Models;
 using System.Linq.Expressions;
+using CreaPrintCore.Models.Base;
 
 namespace CreaPrintCore.Repositories
 {

@@ -1,6 +1,7 @@
+using CreaPrintCore.Models.Base;
 using Newtonsoft.Json;
 
-namespace CreaPrintCore.Models;
+namespace CreaPrintCore.Models.Articles;
 
 public class Article : AuditableEntity
 {

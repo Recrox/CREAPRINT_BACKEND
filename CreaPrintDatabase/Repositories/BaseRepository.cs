@@ -1,4 +1,4 @@
-using CreaPrintCore.Models;
+using CreaPrintCore.Models.Base;
 using Microsoft.EntityFrameworkCore;
 using System.Linq.Expressions;
 

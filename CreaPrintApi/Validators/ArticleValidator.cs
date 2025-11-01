@@ -1,5 +1,5 @@
 using FluentValidation;
-using CreaPrintCore.Models;
+using CreaPrintCore.Models.Articles;
 
 namespace CreaPrintApi.Validators;
 

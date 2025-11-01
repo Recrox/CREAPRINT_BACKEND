@@ -1,9 +1,9 @@
 using System.Threading.Tasks;
 using CreaPrintCore.Interfaces;
-using CreaPrintCore.Models;
 using System.Security.Cryptography;
 using System.Text;
 using System.Collections.Generic;
+using CreaPrintCore.Models.Users;
 
 namespace CreaPrintCore.Services
 {

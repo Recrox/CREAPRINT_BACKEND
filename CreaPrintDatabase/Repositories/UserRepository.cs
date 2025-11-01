@@ -1,5 +1,5 @@
 using CreaPrintCore.Interfaces;
-using CreaPrintCore.Models;
+using CreaPrintCore.Models.Users;
 using CreaPrintCore.Repositories;
 using Microsoft.EntityFrameworkCore;
 

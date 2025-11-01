@@ -2,6 +2,6 @@ namespace CreaPrintConfiguration.Settings
 {
     public class GlobalSettings
     {
-        public string ConnectionString { get; set; } = string.Empty;
+        public string ApiUrl { get; set; } = string.Empty;
     }
 }

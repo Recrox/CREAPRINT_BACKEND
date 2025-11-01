@@ -1,4 +1,6 @@
-namespace CreaPrintCore.Models
+using CreaPrintCore.Models.Base;
+
+namespace CreaPrintCore.Models.Users
 {
     public class User : AuditableEntity
     {

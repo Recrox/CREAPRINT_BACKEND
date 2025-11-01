@@ -1,6 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
 using CreaPrintCore.Interfaces;
-using CreaPrintCore.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
@@ -10,6 +9,7 @@ using CreaPrintApi.Services;
 using Serilog;
 using System.Linq;
 using CreaPrintCore.Services;
+using CreaPrintCore.Models.Users;
 
 namespace CreaPrintApi.Controllers;
 

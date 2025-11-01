@@ -1,9 +1,9 @@
 using Microsoft.AspNetCore.JsonPatch;
 using Microsoft.AspNetCore.Mvc;
 using CreaPrintCore.Interfaces;
-using CreaPrintCore.Models;
 using CreaPrintCore.Services;
 using Microsoft.AspNetCore.Authorization;
+using CreaPrintCore.Models.Articles;
 
 namespace CreaPrintApi.Controllers;
 

@@ -1,6 +1,6 @@
 using AutoMapper;
-using CoreArticle = CreaPrintCore.Models.Article;
-using CoreCategory = CreaPrintCore.Models.Category;
+using CoreArticle = CreaPrintCore.Models.Articles.Article;
+using CoreCategory = CreaPrintCore.Models.Articles.Category;
 using ApiArticle = CreaPrintApi.Dtos.Article;
 using ApiCategory = CreaPrintApi.Dtos.Category;
 

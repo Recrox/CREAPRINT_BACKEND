@@ -1,3 +1,6 @@
+using CreaPrintCore.Models.Articles;
+using CreaPrintCore.Models.Base;
+using CreaPrintCore.Models.Baskets;
 using System.Text.Json.Serialization;
 
 namespace CreaPrintCore.Models;

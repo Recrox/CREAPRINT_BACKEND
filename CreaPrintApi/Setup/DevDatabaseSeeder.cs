@@ -2,6 +2,8 @@ using CreaPrintDatabase;
 using CreaPrintCore.Models;
 using System.Collections.Generic;
 using System;
+using CreaPrintCore.Models.Users;
+using CreaPrintCore.Models.Articles;
 
 namespace CreaPrintApi.Setup;
 

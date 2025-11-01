@@ -1,6 +1,6 @@
 using System.Threading.Tasks;
-using CreaPrintCore.Models;
 using System.Collections.Generic;
+using CreaPrintCore.Models.Users;
 
 namespace CreaPrintCore.Interfaces
 {

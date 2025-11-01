@@ -1,5 +1,6 @@
 using System.Threading.Tasks;
 using CreaPrintCore.Models;
+using CreaPrintCore.Models.Baskets;
 
 namespace CreaPrintCore.Interfaces
 {

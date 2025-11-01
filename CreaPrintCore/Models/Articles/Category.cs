@@ -1,6 +1,7 @@
+using CreaPrintCore.Models.Base;
 using System.Text.Json.Serialization;
 
-namespace CreaPrintCore.Models
+namespace CreaPrintCore.Models.Articles
 {
     public class Category : AuditableEntity
     {

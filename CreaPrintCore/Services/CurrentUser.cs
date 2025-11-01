@@ -1,4 +1,4 @@
-using CreaPrintCore.Models;
+using CreaPrintCore.Models.Users;
 
 namespace CreaPrintCore.Services
 {

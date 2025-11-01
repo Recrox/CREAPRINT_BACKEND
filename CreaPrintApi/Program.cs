@@ -3,7 +3,6 @@ using CreaPrintCore.Setup;
 using CreaPrintDatabase.Setup;
 using CreaPrintConfiguration.Setup;
 using Microsoft.EntityFrameworkCore;
-using CreaPrintCore.Models;
 using FluentValidation.AspNetCore;
 using FluentValidation;
 using CreaPrintApi.Validators;
@@ -17,6 +16,9 @@ using System.Diagnostics;
 using System.Text.Json.Serialization;
 using CreaPrintCore.Interfaces;
 using Swashbuckle.AspNetCore.SwaggerUI;
+using CreaPrintConfiguration.Settings;
+using Microsoft.Extensions.Options;
+using CreaPrintCore.Models.Users;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -52,8 +54,6 @@ builder.Services.AddSingleton<ITokenBlacklist, InMemoryTokenBlacklist>();
 // Register email service
 builder.Services.AddSingleton<IEmailService, EmailService>();
 
-// Register basket repository and service are handled by AddDatabaseRepositories/AddCoreServices changes
-
 // Lecture des AllowedHosts pour CORS
 IEnumerable<string> allowedHosts = builder.Configuration["AllowedHosts"]?.Split(';', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries) ?? Array.Empty<string>();
 
@@ -66,6 +66,17 @@ builder.Services.AddCors(options =>
  .AllowAnyMethod();
  });
 });
+
+// Bind GlobalSettings for direct DI access and register typed options
+builder.Services.Configure<GlobalSettings>(builder.Configuration.GetSection("GlobalSettings"));
+var gs = builder.Configuration.GetSection("GlobalSettings").Get<GlobalSettings>() ?? new GlobalSettings();
+builder.Services.AddSingleton(gs);
+
+// Register named HttpClient based on GlobalSettings.ApiUrl
+if (!string.IsNullOrWhiteSpace(gs.ApiUrl))
+{
+ builder.Services.AddHttpClient("CreaPrintApiClient", client => client.BaseAddress = new Uri(gs.ApiUrl));
+}
 
 // Choix du provider de base de données (InMemory pour dev, SQL Server pour prod)
 if (builder.Environment.IsDevelopment())
@@ -82,16 +93,16 @@ else
 builder.Services.AddControllers()
  .AddJsonOptions(options =>
  {
-     options.JsonSerializerOptions.ReferenceHandler = System.Text.Json.Serialization.ReferenceHandler.IgnoreCycles;
-     // Serialize enums as strings for System.Text.Json
-     options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
+ options.JsonSerializerOptions.ReferenceHandler = System.Text.Json.Serialization.ReferenceHandler.IgnoreCycles;
+ // Serialize enums as strings for System.Text.Json
+ options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
  })
  .AddNewtonsoftJson(options =>
  {
-     // Ensure Newtonsoft ignores reference loops for JsonPatch and swagger generation
-     options.SerializerSettings.ReferenceLoopHandling = Newtonsoft.Json.ReferenceLoopHandling.Ignore;
-     // Serialize enums as strings for Newtonsoft
-     options.SerializerSettings.Converters.Add(new Newtonsoft.Json.Converters.StringEnumConverter());
+ // Ensure Newtonsoft ignores reference loops for JsonPatch and swagger generation
+ options.SerializerSettings.ReferenceLoopHandling = Newtonsoft.Json.ReferenceLoopHandling.Ignore;
+ // Serialize enums as strings for Newtonsoft
+ options.SerializerSettings.Converters.Add(new Newtonsoft.Json.Converters.StringEnumConverter());
  });
 builder.Services.AddAutoMapper(typeof(CreaPrintApi.Dtos.MappingProfile));
 builder.Services.AddEndpointsApiExplorer();
@@ -99,23 +110,23 @@ builder.Services.AddEndpointsApiExplorer();
 // Configure Swagger (removed Bearer security definition)
 builder.Services.AddSwaggerGen(options =>
 {
-    options.CustomSchemaIds(type => type.FullName);
-    // OAuth2 password grant flow for Swagger UI
-    options.AddSecurityDefinition("oauth2", new OpenApiSecurityScheme
-    {
-        Type = SecuritySchemeType.OAuth2,
-        Flows = new OpenApiOAuthFlows
-        {
-            Password = new OpenApiOAuthFlow
-            {
-                TokenUrl = new Uri("/api/user/token", UriKind.Relative),
-                Scopes = new Dictionary<string, string>
+ options.CustomSchemaIds(type => type.FullName);
+ // OAuth2 password grant flow for Swagger UI
+ options.AddSecurityDefinition("oauth2", new OpenApiSecurityScheme
+ {
+ Type = SecuritySchemeType.OAuth2,
+ Flows = new OpenApiOAuthFlows
+ {
+ Password = new OpenApiOAuthFlow
+ {
+ TokenUrl = new Uri("/api/user/token", UriKind.Relative),
+ Scopes = new Dictionary<string, string>
  {
  { "api", "Access API" }
  }
-            }
-        }
-    });
+ }
+ }
+ });
 
  // Also add a simple Bearer scheme so the user can paste a token via the Authorize button
  options.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
@@ -194,6 +205,7 @@ builder.Services.AddAuthentication(options =>
  var token = context.SecurityToken as JwtSecurityToken;
  var raw = context.Request.Headers["Authorization"].FirstOrDefault()?.Split(' ').Last();
  logger.Information("Token validated for {Path}, token present: {HasToken}", context.HttpContext.Request.Path, !string.IsNullOrEmpty(raw));
+ //logger.Information("Token validated for {Path}, token present: {HasToken}", context.HttpContext.Request.Path, !string.IsNullOrEmpty(raw));
  if (token != null && blacklist != null)
  {
  if (blacklist.IsRevoked(raw ?? string.Empty))
@@ -209,17 +221,17 @@ builder.Services.AddAuthentication(options =>
 
 builder.Services.AddAuthorization(options =>
 {
-    options.AddPolicy("AdminOnly", policy =>
-    {
-        policy.RequireAssertion(context =>
-     {
-        var claim = context.User.FindFirst("rights")?.Value;
-        if (string.IsNullOrEmpty(claim)) return false;
-        if (!int.TryParse(claim, out var rights)) return false;
-         // Admin flag ==1
-        return (rights & (int)UserRights.Admin) == (int)UserRights.Admin;
-    });
-    });
+ options.AddPolicy("AdminOnly", policy =>
+ {
+ policy.RequireAssertion(context =>
+ {
+ var claim = context.User.FindFirst("rights")?.Value;
+ if (string.IsNullOrEmpty(claim)) return false;
+ if (!int.TryParse(claim, out var rights)) return false;
+ // Admin flag ==1
+ return (rights & (int)UserRights.Admin) == (int)UserRights.Admin;
+ });
+ });
 });
 
 var app = builder.Build();

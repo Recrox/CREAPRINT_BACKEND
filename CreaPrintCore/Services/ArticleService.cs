@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using CreaPrintCore.Interfaces;
-using CreaPrintCore.Models;
+using CreaPrintCore.Models.Articles;
 
 namespace CreaPrintCore.Services
 {
