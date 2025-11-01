@@ -11,5 +11,6 @@ namespace CreaPrintCore.Interfaces
  Task UpdateAsync(Basket basket);
  Task AddItemAsync(BasketItem item);
  Task RemoveItemAsync(int itemId);
+ Task<BasketItem?> GetItemByIdAsync(int itemId);
  }
 }

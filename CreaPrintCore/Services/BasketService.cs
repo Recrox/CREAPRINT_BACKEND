@@ -8,10 +8,12 @@ namespace CreaPrintCore.Services
  public class BasketService : IBasketService
  {
  private readonly IBasketRepository _repository;
+ private readonly IArticleRepository _articleRepository;
 
- public BasketService(IBasketRepository repository)
+ public BasketService(IBasketRepository repository, IArticleRepository articleRepository)
  {
  _repository = repository;
+ _articleRepository = articleRepository;
  }
 
  public async Task<Basket?> GetByUserIdAsync(int userId)
@@ -26,11 +28,31 @@ namespace CreaPrintCore.Services
 
  public async Task AddItemAsync(BasketItem item)
  {
+ // Check article exists and has enough stock
+ var article = await _articleRepository.GetByIdAsync(item.ArticleId);
+ if (article == null) throw new KeyNotFoundException("Article not found");
+ if (article.Stock < item.Quantity) throw new InvalidOperationException("Insufficient stock");
+
+ // Decrease stock
+ article.Stock -= item.Quantity;
+ await _articleRepository.UpdateAsync(article);
+
  await _repository.AddItemAsync(item);
  }
 
  public async Task RemoveItemAsync(int itemId)
  {
+ // Retrieve item with article to restore stock
+ var item = await _repository.GetItemByIdAsync(itemId);
+ if (item == null) return;
+
+ // restore stock
+ if (item.Article != null)
+ {
+ item.Article.Stock += item.Quantity;
+ await _articleRepository.UpdateAsync(item.Article);
+ }
+
  await _repository.RemoveItemAsync(itemId);
  }
 

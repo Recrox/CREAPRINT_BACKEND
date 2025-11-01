@@ -43,4 +43,9 @@ public class BasketRepository : BaseRepository<Basket>, IBasketRepository
  await _dbContext.SaveChangesAsync();
  }
  }
+
+ public async Task<BasketItem?> GetItemByIdAsync(int itemId)
+ {
+ return await _dbContext.Set<BasketItem>().Include(i => i.Article).FirstOrDefaultAsync(i => i.Id == itemId);
+ }
 }

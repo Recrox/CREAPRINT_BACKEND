@@ -13,4 +13,7 @@ public class Article : AuditableEntity
 
     [JsonIgnore]
     public Category? Category { get; set; }
+
+    // Available stock quantity for the article
+    public int Stock { get; set; } = 0;
 }
