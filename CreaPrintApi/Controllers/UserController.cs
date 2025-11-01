@@ -50,9 +50,11 @@ public class UserController : BaseController
         //    return Unauthorized(new { error = "Account not activated" });
         //}
 
-        var tokenStr = GenerateToken(user);
+        var accessToken = GenerateToken(user);
+        var refreshToken = GenerateRefreshToken(user);
         Log.Logger.Information("User {Username} authenticated", request.Username);
-        return Ok(new { token = tokenStr });
+        var expiresIn =60 *60 *2; //2 hours
+        return Ok(new { access_token = accessToken, refresh_token = refreshToken, token_type = "bearer", expires_in = expiresIn });
     }
 
     // Alias endpoint: POST /api/user/login
@@ -73,9 +75,63 @@ public class UserController : BaseController
 
         //if (!user.IsActive) return Unauthorized(new { error = "Account not activated" });
 
-        var tokenStr = GenerateToken(user);
-        var expiresIn = 60 * 60 * 2; //2 hours
-        return Ok(new { access_token = tokenStr, token_type = "bearer", expires_in = expiresIn });
+        var accessToken = GenerateToken(user);
+        var refreshToken = GenerateRefreshToken(user);
+        var expiresIn =60 *60 *2; //2 hours
+        return Ok(new { access_token = accessToken, refresh_token = refreshToken, token_type = "bearer", expires_in = expiresIn });
+    }
+
+    // Refresh endpoint: POST /api/user/token/refresh
+    [HttpPost("token/refresh")]
+    [Consumes("application/x-www-form-urlencoded")]
+    public async Task<IActionResult> Refresh([FromForm(Name = "refresh_token")] string refreshToken)
+    {
+        if (string.IsNullOrEmpty(refreshToken)) return BadRequest(new { error = "refresh_token missing" });
+
+        // Check revocation
+        if (_blacklist.IsRevoked(refreshToken)) return Unauthorized(new { error = "Refresh token revoked or invalid" });
+
+        var jwtKey = _configuration["Jwt:Key"] ?? "dev_secret_change_me_long_enough";
+        var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey));
+        var tokenHandler = new JwtSecurityTokenHandler();
+
+        try
+        {
+            var principal = tokenHandler.ValidateToken(refreshToken, new TokenValidationParameters
+            {
+                ValidateIssuerSigningKey = true,
+                IssuerSigningKey = key,
+                ValidateIssuer = false,
+                ValidateAudience = false,
+                ValidateLifetime = true
+            }, out var validatedToken);
+
+            // ensure token is a JWT and has the expected 'type' claim
+            var jwt = validatedToken as JwtSecurityToken;
+            if (jwt == null) return Unauthorized(new { error = "Invalid token" });
+
+            var typeClaim = principal.FindFirst("type")?.Value;
+            if (typeClaim != "refresh") return Unauthorized(new { error = "Invalid token type" });
+
+            var sub = principal.FindFirst(JwtRegisteredClaimNames.Sub)?.Value ?? principal.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (!int.TryParse(sub, out var userId)) return Unauthorized();
+
+            var user = await _userRepo.GetByIdAsync(userId);
+            if (user == null) return Unauthorized();
+
+            // rotate refresh token: revoke old, issue new
+            _blacklist.RevokeToken(refreshToken);
+
+            var newAccess = GenerateToken(user);
+            var newRefresh = GenerateRefreshToken(user);
+            var expiresIn =60 *60 *2; //2 hours for access token
+
+            return Ok(new { access_token = newAccess, refresh_token = newRefresh, token_type = "bearer", expires_in = expiresIn });
+        }
+        catch (SecurityTokenException)
+        {
+            return Unauthorized(new { error = "Invalid or expired refresh token" });
+        }
     }
 
     [HttpPost]
@@ -142,7 +198,7 @@ public class UserController : BaseController
         if (string.IsNullOrEmpty(auth)) return BadRequest(new { error = "Authorization header missing" });
 
         var parts = auth.Split(' ', StringSplitOptions.RemoveEmptyEntries);
-        if (parts.Length != 2 || !parts[0].Equals("Bearer", StringComparison.OrdinalIgnoreCase))
+        if (parts.Length !=2 || !parts[0].Equals("Bearer", StringComparison.OrdinalIgnoreCase))
             return BadRequest(new { error = "Invalid Authorization header" });
 
         var token = parts[1];
@@ -171,6 +227,28 @@ public class UserController : BaseController
         audience: null,
         claims: claims,
         expires: DateTime.UtcNow.AddHours(2),
+        signingCredentials: creds
+        );
+
+        return new JwtSecurityTokenHandler().WriteToken(token);
+    }
+
+    private string GenerateRefreshToken(User user)
+    {
+        var jwtKey = _configuration["Jwt:Key"] ?? "dev_secret_change_me_long_enough";
+        var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey));
+        var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
+
+        var claims = new[] {
+ new Claim(JwtRegisteredClaimNames.Sub, user.Id.ToString()),
+ new Claim("type", "refresh")
+ };
+
+        var token = new JwtSecurityToken(
+        issuer: null,
+        audience: null,
+        claims: claims,
+        expires: DateTime.UtcNow.AddDays(30), // long lived refresh token
         signingCredentials: creds
         );
 
