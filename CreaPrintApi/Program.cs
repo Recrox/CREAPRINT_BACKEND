@@ -15,10 +15,8 @@ using System.IdentityModel.Tokens.Jwt;
 using Serilog;
 using System.Diagnostics;
 using System.Text.Json.Serialization;
-using Newtonsoft.Json.Converters;
-using Microsoft.OpenApi.Any;
-using Microsoft.OpenApi.Models;
 using CreaPrintCore.Interfaces;
+using Swashbuckle.AspNetCore.SwaggerUI;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -230,19 +228,17 @@ var app = builder.Build();
 CreaPrintApi.Setup.DevDatabaseSeeder.SeedFakeData(app);
 
 // Pipeline HTTP
-if (app.Environment.IsDevelopment())
+// Enable Swagger and SwaggerUI in all environments (previously only in Development)
+app.UseSwagger();
+app.UseSwaggerUI(options =>
 {
-    app.UseSwagger();
-    app.UseSwaggerUI(options =>
-    {
-        // Configure OAuth settings so the Swagger UI modal shows username/password for the password flow
-        options.OAuthClientId("swagger-ui");
-        options.OAuthAppName("CreaPrint Swagger UI");
-        options.OAuthUsePkce();
-        // Collapse operations and tags by default
-        options.DocExpansion(Swashbuckle.AspNetCore.SwaggerUI.DocExpansion.None);
-    });
-}
+ // Configure OAuth settings so the Swagger UI modal shows username/password for the password flow
+ options.OAuthClientId("swagger-ui");
+ options.OAuthAppName("CreaPrint Swagger UI");
+ options.OAuthUsePkce();
+ // Collapse operations and tags by default
+ options.DocExpansion(DocExpansion.None);
+});
 
 app.UseHttpsRedirection();
 app.UseCors(); // Ajout du middleware CORS
@@ -250,17 +246,17 @@ app.UseCors(); // Ajout du middleware CORS
 // Simple explicit request-logging middleware to guarantee entries for each request
 app.Use(async (context, next) =>
 {
-    var sw = Stopwatch.StartNew();
-    Log.Logger.Information("Incoming {Method} {Path}", context.Request.Method, context.Request.Path);
-    try
-    {
-        await next();
-    }
-    finally
-    {
-        sw.Stop();
-        Log.Logger.Information("Finished {Method} {Path} responded {StatusCode} in {Elapsed}ms", context.Request.Method, context.Request.Path, context.Response.StatusCode, sw.Elapsed.TotalMilliseconds);
-    }
+ var sw = Stopwatch.StartNew();
+ Log.Logger.Information("Incoming {Method} {Path}", context.Request.Method, context.Request.Path);
+ try
+ {
+ await next();
+ }
+ finally
+ {
+ sw.Stop();
+ Log.Logger.Information("Finished {Method} {Path} responded {StatusCode} in {Elapsed}ms", context.Request.Method, context.Request.Path, context.Response.StatusCode, sw.Elapsed.TotalMilliseconds);
+ }
 });
 
 app.UseAuthentication();
@@ -274,8 +270,8 @@ app.MapControllers();
 // Redirige la racine vers Swagger
 app.MapGet("/", context =>
 {
-    context.Response.Redirect("/swagger");
-    return Task.CompletedTask;
+ context.Response.Redirect("/swagger");
+ return Task.CompletedTask;
 });
 
 app.Run();

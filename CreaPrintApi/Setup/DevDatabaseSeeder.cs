@@ -87,7 +87,8 @@ public static class DevDatabaseSeeder
  for (int i =0; i < articles.Length; i++)
  {
  var a = articles[i];
- images.Add(new ArticleImage { ArticleId = a.Id, Url = $"/images/article_{i+1}.jpg", IsPrimary = true });
+ //images.Add(new ArticleImage { ArticleId = a.Id, Url = $"/images/article_{i+1}.jpg", IsPrimary = true });
+ images.Add(new ArticleImage { ArticleId = a.Id, Url = imageUrls[i % imageUrls.Length], IsPrimary = true });
  images.Add(new ArticleImage { ArticleId = a.Id, Url = imageUrls[i % imageUrls.Length], IsPrimary = true });
  }
  db.ArticleImages.AddRange(images);
