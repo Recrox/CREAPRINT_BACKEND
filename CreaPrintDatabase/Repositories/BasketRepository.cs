@@ -48,4 +48,15 @@ public class BasketRepository : BaseRepository<Basket>, IBasketRepository
  {
  return await _dbContext.Set<BasketItem>().Include(i => i.Article).FirstOrDefaultAsync(i => i.Id == itemId);
  }
+
+ public async Task<BasketItem?> GetItemByBasketAndArticleAsync(int basketId, int articleId)
+ {
+ return await _dbContext.Set<BasketItem>().FirstOrDefaultAsync(i => i.BasketId == basketId && i.ArticleId == articleId);
+ }
+
+ public async Task UpdateItemAsync(BasketItem item)
+ {
+ _dbContext.Set<BasketItem>().Update(item);
+ await _dbContext.SaveChangesAsync();
+ }
 }

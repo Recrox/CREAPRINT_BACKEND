@@ -26,13 +26,21 @@ namespace CreaPrintCore.Services
 
  public async Task AddItemAsync(BasketItem item)
  {
- // Do not modify Article.Stock here. Stock will be reserved/consumed when creating the order.
+ // If item for same basket+article exists, increment quantity
+ var existing = await _repository.GetItemByBasketAndArticleAsync(item.BasketId, item.ArticleId);
+ if (existing != null)
+ {
+ existing.Quantity += item.Quantity;
+ await _repository.UpdateItemAsync(existing);
+ return;
+ }
+
  await _repository.AddItemAsync(item);
  }
 
  public async Task RemoveItemAsync(int itemId)
  {
- // Simply remove the item from the basket. Stock restoration happens when order is cancelled/modified if needed.
+ // Simply remove the item from the basket.
  await _repository.RemoveItemAsync(itemId);
  }
 
