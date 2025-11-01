@@ -1,18 +1,18 @@
 using CreaPrintCore.Models.Articles;
 using CreaPrintCore.Models.Base;
-using CreaPrintCore.Models.Baskets;
 using System.Text.Json.Serialization;
 
-namespace CreaPrintCore.Models;
-
-public class BasketItem : AuditableEntity
+namespace CreaPrintCore.Models.Baskets
 {
-public int BasketId { get; set; }
-[JsonIgnore]
-public Basket? Basket { get; set; }
+    public class BasketItem : AuditableEntity
+    {
+        public int BasketId { get; set; }
+        [JsonIgnore]
+        public Basket? Basket { get; set; }
 
-public int ArticleId { get; set; }
-public Article? Article { get; set; }
+        public int ArticleId { get; set; }
+        public Article? Article { get; set; }
 
-public int Quantity { get; set; }
+        public int Quantity { get; set; }
+    }
 }

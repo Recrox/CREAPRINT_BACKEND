@@ -16,6 +16,7 @@ namespace CreaPrintDatabase
         public DbSet<Basket> Baskets { get; set; }
         public DbSet<BasketItem> BasketItems { get; set; }
         public DbSet<ArticleImage> ArticleImages { get; set; }
+        public DbSet<ArticleTranslation> ArticleTranslations { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -37,6 +38,16 @@ namespace CreaPrintDatabase
             .HasOne(ai => ai.Article)
             .WithMany(a => a.Images)
             .HasForeignKey(ai => ai.ArticleId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+            // Article translations: unique per (ArticleId, Language)
+            modelBuilder.Entity<ArticleTranslation>()
+            .HasIndex(t => new { t.ArticleId, t.Language }).IsUnique();
+
+            modelBuilder.Entity<ArticleTranslation>()
+            .HasOne(t => t.Article)
+            .WithMany(a => a.Translations)
+            .HasForeignKey(t => t.ArticleId)
             .OnDelete(DeleteBehavior.Cascade);
         }
     }

@@ -20,4 +20,7 @@ public class Article : AuditableEntity
 
     // Images for the article
     public ICollection<ArticleImage>? Images { get; set; }
+
+    // Localized translations for the article
+    public ICollection<ArticleTranslation>? Translations { get; set; }
 }

@@ -1,8 +1,9 @@
 using Microsoft.AspNetCore.Mvc;
 using CreaPrintCore.Interfaces;
-using CreaPrintCore.Models;
 using CreaPrintCore.Services;
 using CreaPrintCore.Models.Baskets;
+using System.Linq;
+using CreaPrintCore.Dtos;
 
 namespace CreaPrintApi.Controllers;
 
@@ -12,7 +13,7 @@ public class BasketController : BaseController
 {
  private readonly IBasketService _basketService;
 
- public BasketController(CurrentUser currentUser, IBasketService basketService)
+ public BasketController(CreaPrintCore.Services.CurrentUser currentUser, IBasketService basketService)
  : base(currentUser)
  {
  _basketService = basketService;
@@ -21,15 +22,15 @@ public class BasketController : BaseController
  // Get current user's basket
  [HttpGet("me")]
  //[Authorize]
- public async Task<IActionResult> GetMyBasket()
+ public async Task<ActionResult<BasketDto>> GetMyBasket()
  {
  var user = CurrentUser;
  if (user == null) return Unauthorized();
  var userId = user.Id;
 
- var basket = await _basketService.GetByUserIdAsync(userId);
- if (basket == null) return NotFound();
- return Ok(new { basket.Id, Items = basket.Items?.Select(i => new { i.Id, i.ArticleId, i.Quantity, Article = i.Article == null ? null : new { i.Article.Id, i.Article.Title, i.Article.Price } }) });
+ var dto = await _basketService.GetDtoByUserIdAsync(userId);
+ if (dto == null) return NotFound();
+ return Ok(dto);
  }
 
  // GET /api/basket/me/total - total price of current user's basket
@@ -61,7 +62,7 @@ public class BasketController : BaseController
  basket = await _basketService.CreateAsync(basket);
  }
 
- var item = new BasketItem { BasketId = basket.Id, ArticleId = request.ArticleId, Quantity = request.Quantity };
+ var item = new CreaPrintCore.Models.Baskets.BasketItem { BasketId = basket.Id, ArticleId = request.ArticleId, Quantity = request.Quantity };
  await _basketService.AddItemAsync(item);
  return CreatedAtAction(nameof(GetMyBasket), null);
  }
