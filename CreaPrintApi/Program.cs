@@ -3,6 +3,7 @@ using CreaPrintCore.Setup;
 using CreaPrintDatabase.Setup;
 using CreaPrintConfiguration.Setup;
 using Microsoft.EntityFrameworkCore;
+using CreaPrintCore.Models;
 using FluentValidation.AspNetCore;
 using FluentValidation;
 using CreaPrintApi.Validators;
@@ -18,9 +19,13 @@ using CreaPrintCore.Interfaces;
 using Swashbuckle.AspNetCore.SwaggerUI;
 using CreaPrintConfiguration.Settings;
 using Microsoft.Extensions.Options;
-using CreaPrintCore.Models.Users;
+using CreaPrintApi.Setup; // <-- added
+using CreaPrintCore.Models.Users; // <-- added for UserRights
 
 var builder = WebApplication.CreateBuilder(args);
+
+// Configure fly.io hosting adjustments early
+FlyIoSetup.Configure(builder);
 
 // Ensure logs directory exists
 var logsDir = Path.Combine(builder.Environment.ContentRootPath, "_Logs");
@@ -285,5 +290,8 @@ app.MapGet("/", context =>
  context.Response.Redirect("/swagger");
  return Task.CompletedTask;
 });
+
+// Apply forwarded headers configured earlier for proxies
+app.UseForwardedHeaders();
 
 app.Run();
