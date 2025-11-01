@@ -34,4 +34,8 @@
     <Folder Include="wwwroot\swagger-ui\" />
   </ItemGroup>
 
+  <ItemGroup>
+    <None Include="Dockerfile" CopyToOutputDirectory="Never" />
+  </ItemGroup>
+
 </Project>
