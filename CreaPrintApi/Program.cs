@@ -3,7 +3,6 @@ using CreaPrintCore.Setup;
 using CreaPrintDatabase.Setup;
 using CreaPrintConfiguration.Setup;
 using Microsoft.EntityFrameworkCore;
-using CreaPrintCore.Models;
 using FluentValidation.AspNetCore;
 using FluentValidation;
 using CreaPrintApi.Validators;
@@ -18,9 +17,8 @@ using System.Text.Json.Serialization;
 using CreaPrintCore.Interfaces;
 using Swashbuckle.AspNetCore.SwaggerUI;
 using CreaPrintConfiguration.Settings;
-using Microsoft.Extensions.Options;
-using CreaPrintApi.Setup; // <-- added
-using CreaPrintCore.Models.Users; // <-- added for UserRights
+using CreaPrintApi.Setup; 
+using CreaPrintCore.Models.Users; 
 
 var builder = WebApplication.CreateBuilder(args);
 
