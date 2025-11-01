@@ -43,18 +43,13 @@ public class UserController : BaseController
             return Unauthorized();
         }
 
-        //// deny login if user not active
-        //if (!user.IsActive)
-        //{
-        //    Log.Logger.Information("Attempt to login with inactive account {Username}", request.Username);
-        //    return Unauthorized(new { error = "Account not activated" });
-        //}
-
         var accessToken = GenerateToken(user);
         var refreshToken = GenerateRefreshToken(user);
         Log.Logger.Information("User {Username} authenticated", request.Username);
         var expiresIn =60 *60 *2; //2 hours
-        return Ok(new { access_token = accessToken, refresh_token = refreshToken, token_type = "bearer", expires_in = expiresIn });
+
+        var roles = GetRoleNames(user.Rights);
+        return Ok(new { access_token = accessToken, refresh_token = refreshToken, token_type = "bearer", expires_in = expiresIn, rights = (int)user.Rights, roles = roles });
     }
 
     // Alias endpoint: POST /api/user/login
@@ -73,12 +68,12 @@ public class UserController : BaseController
         var user = await _service.AuthenticateAsync(username, password);
         if (user == null) return Unauthorized();
 
-        //if (!user.IsActive) return Unauthorized(new { error = "Account not activated" });
-
         var accessToken = GenerateToken(user);
         var refreshToken = GenerateRefreshToken(user);
         var expiresIn =60 *60 *2; //2 hours
-        return Ok(new { access_token = accessToken, refresh_token = refreshToken, token_type = "bearer", expires_in = expiresIn });
+
+        var roles = GetRoleNames(user.Rights);
+        return Ok(new { access_token = accessToken, refresh_token = refreshToken, token_type = "bearer", expires_in = expiresIn, rights = (int)user.Rights, roles = roles });
     }
 
     // Refresh endpoint: POST /api/user/token/refresh
@@ -126,7 +121,8 @@ public class UserController : BaseController
             var newRefresh = GenerateRefreshToken(user);
             var expiresIn =60 *60 *2; //2 hours for access token
 
-            return Ok(new { access_token = newAccess, refresh_token = newRefresh, token_type = "bearer", expires_in = expiresIn });
+            var roles = GetRoleNames(user.Rights);
+            return Ok(new { access_token = newAccess, refresh_token = newRefresh, token_type = "bearer", expires_in = expiresIn, rights = (int)user.Rights, roles = roles });
         }
         catch (SecurityTokenException)
         {
@@ -213,7 +209,8 @@ public class UserController : BaseController
         var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey));
         var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
 
-        var claims = new[] {
+        var claims = new List<Claim>
+        {
  // include both JWT standard claims and System.Security.Claims types to ensure availability
  new Claim(System.Security.Claims.ClaimTypes.NameIdentifier, user.Id.ToString()),
  new Claim(JwtRegisteredClaimNames.Sub, user.Id.ToString()),
@@ -221,6 +218,16 @@ public class UserController : BaseController
  new Claim(JwtRegisteredClaimNames.UniqueName, user.Username),
  new Claim("rights", ((int)user.Rights).ToString())
  };
+
+ // add role claims for each flag set
+ foreach (UserRights r in Enum.GetValues(typeof(UserRights)))
+ {
+ if (r == UserRights.None) continue;
+ if (user.Rights.HasFlag(r))
+ {
+ claims.Add(new Claim(ClaimTypes.Role, r.ToString()));
+ }
+ }
 
         var token = new JwtSecurityToken(
         issuer: null,
@@ -281,6 +288,17 @@ public class UserController : BaseController
         await _emailService.SendEmailAsync(user.Email, "Password changed", "Your password has been changed.");
 
         return NoContent();
+    }
+
+    private IEnumerable<string> GetRoleNames(UserRights rights)
+    {
+        var list = new List<string>();
+        foreach (UserRights r in Enum.GetValues(typeof(UserRights)))
+        {
+            if (r == UserRights.None) continue;
+            if (rights.HasFlag(r)) list.Add(r.ToString());
+        }
+        return list;
     }
 }
 
