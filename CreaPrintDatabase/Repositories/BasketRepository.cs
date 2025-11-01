@@ -16,7 +16,12 @@ public class BasketRepository : BaseRepository<Basket>, IBasketRepository
 
  public async Task<Basket?> GetByUserIdAsync(int userId)
  {
- return await _dbContext.Set<Basket>().Include(b => b.Items).ThenInclude(i => i.Article).FirstOrDefaultAsync(b => b.UserId == userId);
+ // Include items, the related Article and the Article images so higher-level services can access them without additional queries
+ return await _dbContext.Set<Basket>()
+ .Include(b => b.Items)
+ .ThenInclude(i => i.Article)
+ .ThenInclude(a => a.Images)
+ .FirstOrDefaultAsync(b => b.UserId == userId);
  }
 
  public async Task<Basket> CreateAsync(Basket basket)
@@ -47,12 +52,12 @@ public class BasketRepository : BaseRepository<Basket>, IBasketRepository
 
  public async Task<BasketItem?> GetItemByIdAsync(int itemId)
  {
- return await _dbContext.Set<BasketItem>().Include(i => i.Article).FirstOrDefaultAsync(i => i.Id == itemId);
+ return await _dbContext.Set<BasketItem>().Include(i => i.Article).ThenInclude(a => a.Images).FirstOrDefaultAsync(i => i.Id == itemId);
  }
 
  public async Task<BasketItem?> GetItemByBasketAndArticleAsync(int basketId, int articleId)
  {
- return await _dbContext.Set<BasketItem>().FirstOrDefaultAsync(i => i.BasketId == basketId && i.ArticleId == articleId);
+ return await _dbContext.Set<BasketItem>().Include(i => i.Article).ThenInclude(a => a.Images).FirstOrDefaultAsync(i => i.BasketId == basketId && i.ArticleId == articleId);
  }
 
  public async Task UpdateItemAsync(BasketItem item)
