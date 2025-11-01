@@ -31,6 +31,19 @@ public class BasketController : BaseController
  return Ok(new { basket.Id, Items = basket.Items?.Select(i => new { i.Id, i.ArticleId, i.Quantity, Article = i.Article == null ? null : new { i.Article.Id, i.Article.Title, i.Article.Price } }) });
  }
 
+ // GET /api/basket/me/total - total price of current user's basket
+ [HttpGet("me/total")]
+ //[Authorize]
+ public async Task<IActionResult> GetMyBasketTotal()
+ {
+ var user = CurrentUser;
+ if (user == null) return Unauthorized();
+ var userId = user.Id;
+
+ var total = await _basketService.GetTotalByUserIdAsync(userId);
+ return Ok(new { total });
+ }
+
  // Add item to current user's basket
  [HttpPost("me/items")]
  //[Authorize]

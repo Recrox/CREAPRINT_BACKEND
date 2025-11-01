@@ -9,5 +9,6 @@ namespace CreaPrintCore.Interfaces
  Task<Basket> CreateAsync(Basket basket);
  Task AddItemAsync(BasketItem item);
  Task RemoveItemAsync(int itemId);
+ Task<decimal> GetTotalByUserIdAsync(int userId);
  }
 }

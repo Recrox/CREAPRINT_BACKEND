@@ -1,6 +1,7 @@
 using System.Threading.Tasks;
 using CreaPrintCore.Interfaces;
 using CreaPrintCore.Models;
+using System.Linq;
 
 namespace CreaPrintCore.Services
 {
@@ -31,6 +32,14 @@ namespace CreaPrintCore.Services
  public async Task RemoveItemAsync(int itemId)
  {
  await _repository.RemoveItemAsync(itemId);
+ }
+
+ public async Task<decimal> GetTotalByUserIdAsync(int userId)
+ {
+ var basket = await _repository.GetByUserIdAsync(userId);
+ if (basket == null) return 0m;
+ // Sum quantity * price, handle missing Article or Price
+ return basket.Items?.Sum(i => (i.Article?.Price ?? 0m) * i.Quantity) ?? 0m;
  }
  }
 }
